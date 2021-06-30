@@ -1,0 +1,28 @@
+<div id="pod-page" (keydown.space)="onSpacebarPressed()" (keyup.space)="onSpacebarReleased()">
+    <div id="pod-app-tools">
+
+    </div>
+    <div id="pod-tools">
+
+    </div>
+
+    <div id="pod-features">
+
+    </div>
+    <div id="pod">
+        <div id="pod-layers">
+            <canvas class="pod-layer" *ngFor="let layer of layers" 
+            [width]="layer?.width" 
+            [height]="layer?.height"
+            [style]="layer?.style"
+            ></canvas>
+        </div>
+        <div id="pod-footer">
+
+        </div>
+    </div>
+    <div id="pod-right-pane">
+
+    </div>
+
+</div>
