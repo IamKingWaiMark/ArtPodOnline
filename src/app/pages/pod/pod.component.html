@@ -7,19 +7,24 @@
     </div>
 
     <div id="pod-features">
-
+        <mat-button-toggle-group #featureGroup="matButtonToggleGroup"
+            (change)="onFeatureChanged(featureGroup.value)" 
+            class="container" name="features" aria-label="Pod Features">
+            <mat-button-toggle value="MOVE"><img src="assets/codible_256.png" width="16px" height="16px"></mat-button-toggle>
+            <mat-button-toggle value="BRUSH">B</mat-button-toggle>
+            <mat-button-toggle value="ERASER">C</mat-button-toggle>
+        </mat-button-toggle-group>
     </div>
-    <div id="pod">
+    <div id="pod" #pod
+        (mousemove)="onMouseMoveOnPodDiv($event, pod)"
+         >
         <div id="pod-layers">
-            <canvas class="pod-layer" *ngFor="let layer of layers" 
-            [width]="layer?.width" 
-            [height]="layer?.height"
-            [style]="layer?.style"
-            ></canvas>
+            <app-layer *ngFor="let layer of layers" [layer]="layer" [selectedPodFeature]="selectedPodFeature"></app-layer>
         </div>
         <div id="pod-footer">
 
         </div>
+        <span id="pod-cursor"></span>
     </div>
     <div id="pod-right-pane">
 

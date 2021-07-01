@@ -30,6 +30,32 @@
     border-color: transparent rgb(26, 26, 26) transparent transparent;
     border-style: solid;
     border-width: 1px;
+    overflow: auto;
+    padding: 3px;
+}
+#pod-features .container {
+    display: grid;
+    grid-template-columns: 1fr;
+}
+mat-button-toggle-group {
+    border: none;
+}
+
+mat-button-toggle-group mat-button-toggle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 2em;
+    color: white;
+    background-color: transparent;
+}
+
+.mat-button-toggle-checked {
+    background-color: #282828 !important;
+}
+
+.mat-button-toggle-input {
+    background-color: transparent !important;
 }
 
 #pod-right-pane {
@@ -47,7 +73,13 @@
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
     overflow: hidden;
-
+    cursor: none;
+    position: relative;
+}
+#pod-cursor {
+    position: absolute;
+    mix-blend-mode: difference;
+    pointer-events: none;
 }
 
 #pod-layers {
@@ -55,13 +87,11 @@
     box-sizing: border-box;
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
+    overflow: hidden;
 }
-#pod-layers canvas {
-    position: absolute;
-}
+
 #pod-footer {
     background-color: #535353;
     height: 100%;
 }
-
 
