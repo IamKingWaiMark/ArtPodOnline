@@ -1,0 +1,29 @@
+<div *ngIf="featureInfo?.getShouldShowContextMenu()" [style]="getStyle()">
+
+     <!------------- BRUSH ------------------------->
+
+    <div class="feature-context-menu" *ngIf="isFeatureBrush()">
+        <div>
+            <div class="feature-label">
+                <span>Size</span>
+                <input #brushSizeInput (keyup)="SIZE_SLIDER_INPUT_onChange(brushSizeInput)" [value]="featureInfo.brushSize" class="feature-input" type="number" min="0" max="1000">
+            </div>
+            <mat-slider [value]="featureInfo.brushSize" step="1" min="0" max="1000" aria-label="units"
+                (change)="SIZE_SLIDER_onChange($event)"></mat-slider>
+        </div>
+    </div>
+
+
+    <!------------- ERASER ------------------------->
+
+    <div class="feature-context-menu" *ngIf="isFeatureEraser()">
+        <div>
+            <div class="feature-label">
+                <span>Size</span>
+                <input #eraserSizeInput (keyup)="SIZE_SLIDER_INPUT_onChange(eraserSizeInput)" [value]="featureInfo.eraserSize" class="feature-input" type="number" min="0" max="1000">
+            </div>
+            <mat-slider [value]="featureInfo.eraserSize" step="1" min="0" max="1000" aria-label="units"
+                (change)="SIZE_SLIDER_onChange($event)"></mat-slider>
+        </div>
+    </div>
+</div>

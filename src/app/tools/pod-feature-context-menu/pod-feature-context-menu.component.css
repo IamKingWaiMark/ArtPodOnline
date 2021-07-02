@@ -1,0 +1,39 @@
+.feature-context-menu {
+    box-shadow: 0 0 2px 1px rgba(54, 54, 54, 0.26);
+    padding: .5em;
+    background-color: #535353;
+    border: 2px solid #282828;;
+    min-width: 10em;
+    color: white;
+    cursor: context-menu;
+}
+
+button {
+    background-color: none;
+    outline: none;
+}
+
+mat-slider {
+    width: 100%;
+}
+
+.feature-label {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.feature-input {
+    font-size: .75em;
+}
+
+/* Remove arrows Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
