@@ -15,27 +15,39 @@ export class LayerComponent implements OnInit {
   constructor() { }
 
   ngOnInit(): void {
+    /*try {
+      window.addEventListener("mousedown", this.WINDOW_EVNT_onMouseDown);
+      window.addEventListener("mouseup", this.WINDOW_EVNT_onMouseUp);
+    } catch (err) {
+
+    }*/
+  }
+
+  /*ngOnDestroy() {
     try {
-
-      window.onmousedown = (ev: MouseEvent) => {
-        let canvas = document.querySelector("canvas");
-        let pen = canvas.getContext("2d");
-        this.editModeOn = true;
-        pen.beginPath();
-        pen.moveTo(ev.offsetX, ev.offsetY);
-      }
-      window.onmouseup = (ev: MouseEvent) => {
-        this.editModeOn = false;
-      }
-
+      window.removeEventListener("mousedown", this.WINDOW_EVNT_onMouseDown);
+      window.removeEventListener("mouseup", this.WINDOW_EVNT_onMouseUp);
     } catch (err) {
 
     }
   }
 
-  onMouseMove(ev: MouseEvent, canvas: HTMLCanvasElement) {
+  WINDOW_EVNT_onMouseDown = (ev: MouseEvent) => {
+    let canvas = document.querySelector("canvas");
     let pen = canvas.getContext("2d");
-    if (!this.editModeOn) return;
+    this.editModeOn = true;
+    pen.beginPath();
+    pen.moveTo(ev.offsetX, ev.offsetY);
+  }
+  WINDOW_EVNT_onMouseUp = (ev: MouseEvent) => {
+    this.editModeOn = false;
+  }
+
+
+
+  onMouseMove(ev: MouseEvent, canvas: HTMLCanvasElement) {
+    if (!this.editModeOn || ev.button != 0) return;
+    let pen = canvas.getContext("2d");
     switch (this.selectedPodFeature) {
       case PodFeatures.BRUSH: this.brushMode(pen, ev); break;
       case PodFeatures.ERASER: this.eraserMode(pen, ev); break;
@@ -48,18 +60,6 @@ export class LayerComponent implements OnInit {
     pen.moveTo(ev.offsetX, ev.offsetY);
   }
 
-  onMouseDown(ev: MouseEvent, canvas: HTMLCanvasElement) {
-    let pen = canvas.getContext("2d");
-    this.editModeOn = true;
-    pen.beginPath();
-    pen.moveTo(ev.offsetX, ev.offsetY);
-    
-    if (!this.editModeOn) return;
-    switch (this.selectedPodFeature) {
-      case PodFeatures.BRUSH: this.brushMode(pen, ev); break;
-      case PodFeatures.ERASER: this.eraserMode(pen, ev); break;
-    }
-  }
 
   brushMode(pen: CanvasRenderingContext2D, ev: MouseEvent) {
     pen.strokeStyle = `${'#000000'}`;
@@ -67,6 +67,8 @@ export class LayerComponent implements OnInit {
     let mouseX = ev.offsetX;
     let mouseY = ev.offsetY;
     pen.lineTo(mouseX, mouseY);
+    pen.lineWidth = 10;
+    pen.lineCap = "round";
     pen.stroke();
   }
 
@@ -74,10 +76,10 @@ export class LayerComponent implements OnInit {
     pen.beginPath();
     let mouseX = ev.offsetX;
     let mouseY = ev.offsetY;
-    pen.globalCompositeOperation = "destination-out";
-    pen.arc(mouseX, mouseY, (100/2), 0, Math.PI * 2, false);
+    pen.globalCompositeOperation = "destination-in";
+    pen.arc(mouseX, mouseY, (100 / 2), 0, Math.PI * 2, false);
     pen.fill();
     pen.closePath();
-  }
+  }*/
 
 }

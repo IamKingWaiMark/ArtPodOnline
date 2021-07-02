@@ -1,4 +1,4 @@
-<div id="pod-page" (keydown.space)="onSpacebarPressed()" (keyup.space)="onSpacebarReleased()">
+<div id="pod-page" >
     <div id="pod-app-tools">
 
     </div>
@@ -9,22 +9,24 @@
     <div id="pod-features">
         <mat-button-toggle-group #featureGroup="matButtonToggleGroup"
             (change)="onFeatureChanged(featureGroup.value)" 
-            class="container" name="features" aria-label="Pod Features">
-            <mat-button-toggle value="MOVE"><img src="assets/codible_256.png" width="16px" height="16px"></mat-button-toggle>
-            <mat-button-toggle value="BRUSH">B</mat-button-toggle>
-            <mat-button-toggle value="ERASER">C</mat-button-toggle>
+            class="container" name="features" aria-label="Pod Features" value="MOVE">
+            <mat-button-toggle value="MOVE" ><img src="assets/icons/feature_move.png" width="16px" height="16px"></mat-button-toggle>
+            <mat-button-toggle value="BRUSH"><img src="assets/icons/feature_brush.png" width="16px" height="16px"></mat-button-toggle>
+            <mat-button-toggle value="ERASER"><img src="assets/icons/feature_eraser.png" width="16px" height="16px"></mat-button-toggle>
         </mat-button-toggle-group>
     </div>
-    <div id="pod" #pod
-        (mousemove)="onMouseMoveOnPodDiv($event, pod)"
-         >
+    <div id="pod" #pod 
+        (contextmenu)="POD_DIV_onRightClick($event)" 
+        (mousemove)="POD_DIV_onMouseMove($event, pod, podCursor)"
+        (mouseout)="POD_DIV_onMouseOut()">
         <div id="pod-layers">
             <app-layer *ngFor="let layer of layers" [layer]="layer" [selectedPodFeature]="selectedPodFeature"></app-layer>
         </div>
         <div id="pod-footer">
 
         </div>
-        <span id="pod-cursor"></span>
+        <span id="pod-cursor" #podCursor></span>
+        <pod-feature-context-menu [featureInfo]="FEATURE_INFO" [currentFeature]="selectedPodFeature" [podDiv]="pod"></pod-feature-context-menu>
     </div>
     <div id="pod-right-pane">
 
