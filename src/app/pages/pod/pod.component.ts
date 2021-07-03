@@ -1,4 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { Component, EventEmitter, Inject, OnInit, PLATFORM_ID } from '@angular/core';
+import { GlobalEvents, HotKey } from 'src/app/tools/classes/global-events';
+import { Swatch } from 'src/app/tools/classes/swatch';
 
 @Component({
   selector: 'app-pod',
@@ -6,38 +9,51 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./pod.component.css']
 })
 export class PodComponent implements OnInit {
-
+  public readonly GLOBAL_EVENTS = new GlobalEvents();
+  public readonly CURSOR_GENERATOR: CursorGenerator = new CursorGenerator();
+  public readonly FEATURE_INFO: FeatureInfo = new FeatureInfo();
   public readonly DEFAULTS = {
     POD_FEATURES: PodFeatures.MOVE
   }
 
-  public readonly CURSOR_GENERATOR: CursorGenerator = new CursorGenerator();
-  public readonly FEATURE_INFO: FeatureInfo = new FeatureInfo();
-
-
   layers: Layer[] = [];
-  GLOBAL_spacebarPressed = true;
   selectedPodFeature: PodFeatures = this.DEFAULTS.POD_FEATURES;
 
 
-
-
-  constructor() { }
+  constructor(@Inject(PLATFORM_ID) private platform: Object) { }
 
   ngOnInit(): void {
-    this.layers.push(new Layer(500, 500, "#FFFFFF", true));
-    this.addWindowKeyEvents();
+
+    if(isPlatformBrowser(this.platform)) {
+      this.layers.push(new Layer(500, 500, "#FFFFFF", true));
+      this.addWindowKeyEvents();
+    }
   }
 
   private addWindowKeyEvents() {
-    try {
-      window.oncontextmenu = () => {
-        return false;
-      }
-    } catch (err) {
-
+    window.oncontextmenu = () => {
+      return false;
     }
+    window.addEventListener("mousemove", (ev: MouseEvent) => {
+      this.GLOBAL_EVENTS.GLOBAL_MOUSE_MOVE_EVENT.emit(ev);
+    });
+    window.addEventListener("mouseup", (ev) => {
+      this.GLOBAL_EVENTS.GLOBAL_MOUSE_UP_EVENT.emit(ev);
+    });
+    window.addEventListener("keydown", (ev: KeyboardEvent) => {
+      if(ev.ctrlKey && ev.shiftKey) {
 
+      } else if (ev.ctrlKey) { 
+
+      } else if (ev.shiftKey) { 
+
+      } else {
+        switch(ev.key.toLowerCase()) {
+          case "x": this.GLOBAL_EVENTS.GLOBAL_HOT_KEY_EVENT.emit(HotKey.SWAP_SWATCH); break;
+        }
+      }
+      this.GLOBAL_EVENTS.GLOBAL_KEYDOWN_EVENT.emit(ev);
+    });
   }
   /*
     POD
@@ -48,7 +64,7 @@ export class PodComponent implements OnInit {
       case "BRUSH": this.selectedPodFeature = PodFeatures.BRUSH; break;
       case "ERASER": this.selectedPodFeature = PodFeatures.ERASER; break;
     }
-
+    this.FEATURE_INFO.setShouldShowContextMenu(false);
   }
 
   POD_DIV_onMouseOut() {
@@ -62,7 +78,20 @@ export class PodComponent implements OnInit {
       case PodFeatures.ERASER: this.CURSOR_GENERATOR.genEraserCursor(ev, podDiv, podCursor, this.FEATURE_INFO.getEraserSize()); break;
     }
   }
-
+  POD_DIV_onMouseDown(ev: MouseEvent){
+    switch(ev.button) {
+      case 0: break;
+      case 1: break;
+      case 2: break;
+    }
+  }
+  POD_DIV_onMouseUp(ev: MouseEvent){
+    switch(ev.button) {
+      case 0: break;
+      case 1: break;
+      case 2: break;
+    }
+  }
   POD_DIV_onRightClick(ev: MouseEvent) {
     if (this.selectedPodFeature) {
       this.FEATURE_INFO.setMouseX(ev.x);
@@ -70,22 +99,18 @@ export class PodComponent implements OnInit {
       this.FEATURE_INFO.setShouldShowContextMenu(true);
     }
   }
+
+
   /*
     POD END
   */
 
 
 
-  onSpacebarPressed() {
-    this.GLOBAL_spacebarPressed = true;
-  }
-  onSpacebarReleased() {
-    this.GLOBAL_spacebarPressed = false;
-  }
-
-
 
 }
+
+
 
 
 export class Layer {
@@ -101,7 +126,7 @@ export class Layer {
     } else {
 
     }
-
+    
   }
 
 
@@ -118,11 +143,11 @@ export class Layer {
 
 }
 
-export enum PodFeatures {
-  MOVE = "MOVE",
-  BRUSH = "BRUSH",
-  ERASER = "#00000000"
-}
+
+
+
+
+
 
 export class CursorGenerator {
   genMoveCursor(ev: MouseEvent, podDiv: HTMLDivElement, podCursor: HTMLSpanElement) {
@@ -170,13 +195,27 @@ export class CursorGenerator {
   }
 }
 
+export enum PodFeatures {
+  MOVE = "MOVE",
+  BRUSH = "BRUSH",
+  ERASER = "#00000000"
+}
 export class FeatureInfo {
   private eraserSize = 50;
-  private brushSize = 50;
   private mouseX = 0;
   private mouseY = 0;
   private shouldShowContextMenu = false;
+  // BRUSH
+  private brushSize = 50;
+  private brushColor: {r: number, g: number, b: number} = {r: 0, g: 0, b: 0};
 
+
+  public getBrushColor(){
+    return this.brushColor? this.brushColor: {r: 255, g: 255, b: 255};
+  }
+  public setBrushColor(swatch: Swatch){
+    this.brushColor = swatch.color;
+  }
   public getEraserSize() {
     return this.eraserSize;
   }

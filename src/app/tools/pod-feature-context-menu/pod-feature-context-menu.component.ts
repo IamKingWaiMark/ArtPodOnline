@@ -1,4 +1,5 @@
-import { Component, EventEmitter, Input, OnInit } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { Component, EventEmitter, Inject, Input, OnInit, PLATFORM_ID } from '@angular/core';
 import { MatSliderChange } from '@angular/material/slider';
 import { FeatureInfo, PodFeatures } from 'src/app/pages/pod/pod.component';
 
@@ -17,28 +18,30 @@ export class PodFeatureContextMenuComponent implements OnInit {
   ERASER_FEATURE: EraserFeatureContextMenu;
 
 
-  constructor() { 
+  constructor(@Inject(PLATFORM_ID) private platform: Object) { 
     
   }
 
   ngOnInit(): void {
-    this.BRUSH_FEATURE = new BrushFeatureContextMenu(this.featureInfo);
-    this.ERASER_FEATURE = new EraserFeatureContextMenu(this.featureInfo);
-    try {
-      this.podDiv.addEventListener("click", (ev) => {
-        let activeContextMenu = <HTMLDivElement>document.querySelector(".feature-context-menu");
-        if(!activeContextMenu) return;
-
-        let contextMenuDimension = activeContextMenu.getBoundingClientRect();
-        if(!(ev.x > contextMenuDimension.x && ev.x < contextMenuDimension.x + contextMenuDimension.width &&
-            ev.y > contextMenuDimension.y && ev.y < contextMenuDimension.y + contextMenuDimension.height
-          )) {
-            if(this.featureInfo.getShouldShowContextMenu()) this.featureInfo.setShouldShowContextMenu(false);
-        }
-      });
-    } catch (err) {
-
+    if(isPlatformBrowser(this.platform)) {
+      this.BRUSH_FEATURE = new BrushFeatureContextMenu(this.featureInfo);
+      this.ERASER_FEATURE = new EraserFeatureContextMenu(this.featureInfo);
+      this.addEventListenerToPodDiv();
     }
+  }
+
+  private addEventListenerToPodDiv(){
+    this.podDiv.addEventListener("click", (ev) => {
+      let activeContextMenu = <HTMLDivElement>document.querySelector(".feature-context-menu");
+      if(!activeContextMenu) return;
+
+      let contextMenuDimension = activeContextMenu.getBoundingClientRect();
+      if(!(ev.x > contextMenuDimension.x && ev.x < contextMenuDimension.x + contextMenuDimension.width &&
+          ev.y > contextMenuDimension.y && ev.y < contextMenuDimension.y + contextMenuDimension.height
+        )) {
+          if(this.featureInfo.getShouldShowContextMenu()) this.featureInfo.setShouldShowContextMenu(false);
+      }
+    });
   }
 
   isFeatureMove(){

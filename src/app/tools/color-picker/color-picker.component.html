@@ -1,0 +1,25 @@
+<div class="color-picker-container">
+
+    <div class="color-picker-swatches">
+        <div class="swatch">
+            
+        </div>
+        <div class="swatch">
+
+        </div>
+    </div>
+
+    <div class="color-picker-content-container">
+        <canvas class="color-picker" #colorPicker width="0" height="0" 
+            (mousedown)="COLOR_PICKER_onMouseDown($event, colorPicker)"></canvas>
+        <span class="color-picker-selector-circle"></span>
+    </div>
+
+    <div class="color-picker-slider-container">
+        <canvas class="color-picker-slider"
+            #colorPickerSlider width="0" height="0" 
+            (mousedown)="COLOR_PICKER_SLIDER_onMouseDown($event, colorPickerSlider, colorPicker)"
+            ></canvas>
+        <img class="color-picker-slider-pointer" src="assets/icons/color_picker_slider_pointer.png">
+    </div>
+</div>
