@@ -2,4 +2,6 @@
     class="pod-layer" 
     [width]="layer?.width" 
     [height]="layer?.height"
-    [style]="layer?.style"></canvas>
+    [style]="layer?.style"
+    (mousemove)="onMouseMove($event, layerCanvas)"
+    ></canvas>

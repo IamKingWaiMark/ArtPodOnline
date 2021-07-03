@@ -18,9 +18,11 @@
     <div id="pod" #pod 
         (contextmenu)="POD_DIV_onRightClick($event)" 
         (mousemove)="POD_DIV_onMouseMove($event, pod, podCursor)"
-        (mouseout)="POD_DIV_onMouseOut()">
+        (mouseout)="POD_DIV_onMouseOut()"
+        (mousedown)="POD_DIV_onMouseDown($event)"
+        (mouseup)="POD_DIV_onMouseUp($event)">
         <div id="pod-layers">
-            <app-layer *ngFor="let layer of layers" [layer]="layer" [selectedPodFeature]="selectedPodFeature"></app-layer>
+            <app-layer *ngFor="let layer of layers" [FEATURE_INFO]="FEATURE_INFO" [layer]="layer" [selectedPodFeature]="selectedPodFeature"></app-layer>
         </div>
         <div id="pod-footer">
 
@@ -29,7 +31,7 @@
         <pod-feature-context-menu [featureInfo]="FEATURE_INFO" [currentFeature]="selectedPodFeature" [podDiv]="pod"></pod-feature-context-menu>
     </div>
     <div id="pod-right-pane">
-
+        <color-picker [GLOBAL_EVENTS]="GLOBAL_EVENTS" (selectedColor)="FEATURE_INFO?.setBrushColor($event)"></color-picker>
     </div>
 
 </div>
