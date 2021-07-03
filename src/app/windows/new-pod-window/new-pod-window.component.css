@@ -1,0 +1,63 @@
+#pod-window {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr 20em;
+    grid-template-rows: 1fr 5em;
+    overflow: auto;
+}
+#pod-window-box-2 {
+    background-color: var(--primary-color-accent);
+    overflow: auto;
+    padding: 1em;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+}
+#pod-window-box-4 {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 1em;
+    background-color: var(--primary-color-accent);
+}
+
+button {
+    width: 8em;
+}
+
+.pod-title-input {
+    background-color: transparent;
+    border-color: transparent transparent white transparent;
+    border-width: 1px;
+    border-style: solid;
+    padding: 1em 0;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    outline: none;
+    width: 100%;
+    font-size: 1.2em;
+    color: white;
+}
+
+
+
+@media screen and (min-width: 80em){
+    #pod-window {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: 1fr 30em;
+        grid-template-rows: 1fr 5em;
+    }
+      
+}

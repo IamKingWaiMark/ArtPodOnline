@@ -10,6 +10,7 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { PodFeatureContextMenuComponent } from './tools/pod-feature-context-menu/pod-feature-context-menu.component';
 import { MatSliderModule } from '@angular/material/slider';
 import { ColorPickerComponent } from './tools/color-picker/color-picker.component';
+import { NewPodWindowComponent } from './windows/new-pod-window/new-pod-window.component';
 
 @NgModule({
   declarations: [
@@ -17,7 +18,8 @@ import { ColorPickerComponent } from './tools/color-picker/color-picker.componen
     PodComponent,
     LayerComponent,
     PodFeatureContextMenuComponent,
-    ColorPickerComponent
+    ColorPickerComponent,
+    NewPodWindowComponent
   ],
   imports: [
     BrowserModule.withServerTransition({ appId: 'serverApp' }),

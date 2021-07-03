@@ -1,6 +1,8 @@
 <div id="pod-page" >
     <div id="pod-app-tools">
-
+        <img src="assets/codieble_256.png" width="16" height="16" style="margin: 0 .5em;">
+        <span>File</span>
+        <span>Edit</span>
     </div>
     <div id="pod-tools">
 
@@ -15,21 +17,23 @@
             <mat-button-toggle value="ERASER"><img src="assets/icons/feature_eraser.png" width="16px" height="16px"></mat-button-toggle>
         </mat-button-toggle-group>
     </div>
+
+    <div id="pod" #pod>
+        <app-new-pod-window></app-new-pod-window>
+    </div>
+    <!--
     <div id="pod" #pod 
         (contextmenu)="POD_DIV_onRightClick($event)" 
         (mousemove)="POD_DIV_onMouseMove($event, pod, podCursor)"
         (mouseout)="POD_DIV_onMouseOut()"
         (mousedown)="POD_DIV_onMouseDown($event)"
         (mouseup)="POD_DIV_onMouseUp($event)">
-        <div id="pod-layers">
-            <app-layer *ngFor="let layer of layers" [FEATURE_INFO]="FEATURE_INFO" [layer]="layer" [selectedPodFeature]="selectedPodFeature"></app-layer>
-        </div>
-        <div id="pod-footer">
 
-        </div>
+        
         <span id="pod-cursor" #podCursor></span>
         <pod-feature-context-menu [featureInfo]="FEATURE_INFO" [currentFeature]="selectedPodFeature" [podDiv]="pod"></pod-feature-context-menu>
     </div>
+    -->
     <div id="pod-right-pane">
         <color-picker [GLOBAL_EVENTS]="GLOBAL_EVENTS" (selectedColor)="FEATURE_INFO?.setBrushColor($event)"></color-picker>
     </div>
