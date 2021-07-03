@@ -1,7 +1,7 @@
 #pod-page {
     height: 100vh;
     width: 100vw;
-    background-color: #535353;
+    background-color: var(--primary-color);
     display: grid;
     grid-template-columns: 3em 1fr 20em;
     grid-template-rows: 2em 3em 1fr;
@@ -14,21 +14,43 @@
 #pod-app-tools {
     grid-column: 1 / 4;
     grid-row: 1;
-    border-color: transparent transparent rgb(26, 26, 26) transparent;
+    border-color: transparent transparent var(--primary-color-dark) transparent;
     border-style: solid;
     border-width: 1px;
+    display: flex;
+    align-items: center;
+    color: white;
+    font-size: .8em;
+    overflow: hidden;
+}
+
+#pod-app-tools span:nth-child(1) {
+    margin-left: .5em;
+}
+
+#pod-app-tools span {
+    margin: 0 .25em;
+    background-color: #535353;
+    border: 1px solid #535353;
+    padding: .25em .5em;
+    border-radius: 3px;
+}
+
+#pod-app-tools span:hover {
+    border: 1px solid white;
+    background-color: #424242;
 }
 
 #pod-tools {
     grid-column: 1 / 4;
     grid-row: 2;
-    border-color: transparent transparent rgb(26, 26, 26) transparent;
+    border-color: transparent transparent var(--primary-color-dark) transparent;
     border-style: solid;
     border-width: 1px;
 }
 
 #pod-features {
-    border-color: transparent rgb(26, 26, 26) transparent transparent;
+    border-color: transparent var(--primary-color-dark) transparent transparent;
     border-style: solid;
     border-width: 1px;
     overflow: auto;
@@ -53,7 +75,7 @@ mat-button-toggle-group mat-button-toggle {
 
 
 .mat-button-toggle-checked {
-    background-color: #282828 !important;
+    background-color: var(--primary-color-dark) !important;
 }
 
 .mat-button-toggle-input {
@@ -61,11 +83,20 @@ mat-button-toggle-group mat-button-toggle {
 }
 
 #pod-right-pane {
-    border-color: transparent transparent transparent rgb(26, 26, 26);
+    border-color: transparent transparent transparent var(--primary-color-dark);
     border-style: solid;
     border-width: 1px;
 }
 
+#pod {
+    background-color: var(--primary-color-dark);
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    overflow: hidden;
+    position: relative;
+}
+/*
 #pod {
     background-color: #282828;
     display: grid;
@@ -95,7 +126,7 @@ mat-button-toggle-group mat-button-toggle {
 #pod-footer {
     background-color: #535353;
     height: 100%;
-}
+}*/
 
 
 

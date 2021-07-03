@@ -67,7 +67,7 @@ export class PodComponent implements OnInit {
     this.FEATURE_INFO.setShouldShowContextMenu(false);
   }
 
-  POD_DIV_onMouseOut() {
+  /*POD_DIV_onMouseOut() {
     this.CURSOR_GENERATOR.resetPodCursor();
   }
 
@@ -98,7 +98,7 @@ export class PodComponent implements OnInit {
       this.FEATURE_INFO.setMouseY(ev.y);
       this.FEATURE_INFO.setShouldShowContextMenu(true);
     }
-  }
+  }*/
 
 
   /*
