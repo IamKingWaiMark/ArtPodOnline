@@ -285,47 +285,12 @@ export class ColorPicker {
     mainSwatchDiv.style.backgroundColor = `rgb(${this.getMainSwatch().color.r}, ${this.getMainSwatch().color.g}, ${this.getMainSwatch().color.b})`;
     subSwatchDiv.style.backgroundColor = `rgb(${this.getSubSwatch().color.r}, ${this.getSubSwatch().color.g}, ${this.getSubSwatch().color.b})`;
   }
-
-
-
-
-
-  
-
   swapSwatch() {
     let oldMainSwatch = this.swatches[0];
     let oldSubSwatch = this.swatches[1];
     this.swatches[0] = oldSubSwatch;
     this.swatches[1] = oldMainSwatch;
   }
-
-
-
-
-
-
-
-
-
-  /*setColorPickerColorBasedOnSliderColor(ev: MouseEvent, colorPickerSlider: HTMLCanvasElement, colorPicker: HTMLCanvasElement) {
-    let colorPickerSliderDimensions = colorPickerSlider.getBoundingClientRect();
-    var mouseY = ev.y - colorPickerSliderDimensions.y;
-    mouseY = mouseY <= 0 ? 0 : mouseY;
-    let maxHeight = colorPickerSliderDimensions.height - 1;
-    mouseY = mouseY >= maxHeight ? maxHeight : mouseY;
-    var pixelValue = colorPickerSlider.getContext("2d")
-      .getImageData(
-        5,
-        mouseY >= maxHeight ? mouseY - (this.colorPickerSliderYOffset) : mouseY,
-        1, 1).data;
-    let rgb = { r: pixelValue[0], g: pixelValue[1], b: pixelValue[2] };
-    //this.setColorPickerSliderPointerPosition({ x: 0, y: mouseY });
-    //this.changeColorPickerColor(colorPicker, rgb);
-    //this.selectedColor.emit(this.getColorPickerColor());
-  }
-*/
-
-
 }
 
 

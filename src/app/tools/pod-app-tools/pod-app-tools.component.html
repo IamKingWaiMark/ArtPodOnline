@@ -1,0 +1,22 @@
+<div id="pod-app-tools-comp">
+    <img src="assets/codieble_256.png" width="16" height="16" style="margin: 0 .5em;">
+    <div class="pod-tool-menu">
+        <span (click)="onFileToolClick()" [ngClass]="{'active-pod-tool': fileToolActive()}">File</span>
+        <div *ngIf="fileToolActive()" class="pod-tool-action-list">
+            <div class="pod-tool-action-list-item" (click)="onFileActionItemClick('FILE')">
+                <p>New</p>
+                <p>{{getCtrlKeyText()}} + Alt + N</p>
+            </div>
+        </div>
+    </div>
+    <div class="pod-tool-menu">
+        <span (click)="onEditToolClick()">Edit</span>
+        <div *ngIf="editToolActive()" class="pod-tool-action-list">
+            <div class="pod-tool-action-list-item" (click)="onEditActionItemClick('UNDO')">
+                <p>Undo</p>
+                <p>{{getCtrlKeyText()}} + Z</p>
+            </div>
+        </div>
+    </div>
+    
+</div>

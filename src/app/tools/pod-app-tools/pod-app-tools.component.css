@@ -1,0 +1,75 @@
+#pod-app-tools-comp {
+    display: flex;
+    align-items: center;
+    color: white;
+    font-size: .8em;
+    height: 100%;
+    overflow: visible;
+}
+
+#pod-app-tools-comp:nth-child(1) {
+    margin-left: .5em;
+}
+
+#pod-app-tools-comp span {
+    margin: 0 .25em;
+    background-color: #535353;
+    border: 1px solid #535353;
+    padding: .25em .5em;
+    border-radius: 3px;
+}
+
+
+#pod-app-tools-comp span:hover {
+    border: 1px solid white;
+    background-color: #424242;
+}
+
+.active-pod-tool {
+    border: 1px solid white;
+    background-color: #424242;
+}
+
+
+.pod-tool-menu {
+    height: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.pod-tool-action-list {
+    position: absolute;
+    top: 2em;
+    left: 0;
+    z-index: 2;
+    background-color: var(--primary-context-menu-bg);
+}
+
+.pod-tool-action-list-item {
+    padding: .5em 1em;
+    color: black;
+    display: grid;
+    grid-template-columns: 8em 8em;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+
+}
+
+.pod-tool-action-list-item p {
+    padding: 0;
+    margin: 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+.pod-tool-action-list-item p:nth-child(2) {
+    text-align: end;
+}
+
+.pod-tool-action-list-item:hover {
+    background-color: var(--primary-button-color);
+    color: var(--primary-context-menu-bg);
+}
+
