@@ -1,0 +1,18 @@
+<div class="pod-document-controller">
+    <div class="pod-document-controller-tab-bar">
+        <div class="tab-bar-tab-container">
+            <div *ngFor="let podDocument of podDocuments; index as i;"  [ngClass]="{'tab': true, 'active-tab': isActiveTab(i)}"  >
+                <div class="tab-title-container"><span class="tab-title" (click)="onTabClick(i)">{{podDocument?.metaData.docName}}</span></div>
+                <div class="tab-icon-container"><span class="tab-icon" (click)="onDeleteTabClick(i)">x</span></div>
+            </div>
+        </div>
+
+        <div class="tab-bar-more-icon">
+
+        </div>
+    </div>
+    <div style="position: relative; box-sizing: border-box; -moz-box-sizing: border-box; -webkit-box-sizing: border-box;">
+        <app-pod-document></app-pod-document>
+    </div>
+
+</div>

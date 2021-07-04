@@ -9,7 +9,7 @@
     </div>
     <div id="pod-window-box-2">
         <!--Pod Title Input-->
-        <input class="pod-title-input" placeholder="Untitled" value="Untitled">
+        <input id="pod-window-title-input" class="pod-title-input" placeholder="Untitled" value="Untitled">
 
         <div class="label"><span>Width</span></div>
         <span></span>
@@ -35,6 +35,6 @@
     </div>
     <div id="pod-window-box-4">
         <button (click)="onCreateClick()" class="round-button primary-button" style="margin-right: 1em;">Create</button>
-        <button (click)="onCloseClick()" class="round-button secondary-button">Close</button>
+        <button [disabled]="!hasPodDocuments()" (click)="onCloseClick()" class="round-button secondary-button">Close</button>
     </div>
 </div>

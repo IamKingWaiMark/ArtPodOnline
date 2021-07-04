@@ -1,20 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { LayerComponent } from './layer.component';
+import { PodDocumentComponent } from './pod-document.component';
 
-describe('LayerComponent', () => {
-  let component: LayerComponent;
-  let fixture: ComponentFixture<LayerComponent>;
+describe('PodDocumentComponent', () => {
+  let component: PodDocumentComponent;
+  let fixture: ComponentFixture<PodDocumentComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ LayerComponent ]
+      declarations: [ PodDocumentComponent ]
     })
     .compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(LayerComponent);
+    fixture = TestBed.createComponent(PodDocumentComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

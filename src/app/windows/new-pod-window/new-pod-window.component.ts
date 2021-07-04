@@ -1,5 +1,6 @@
 import { isPlatformBrowser } from '@angular/common';
-import { Component, EventEmitter, Inject, OnInit, Output, PLATFORM_ID } from '@angular/core';
+import { Component, EventEmitter, Inject, Input, OnInit, Output, PLATFORM_ID } from '@angular/core';
+import { PodDocMetaData, PodDocument } from 'src/app/tools/classes/pod-document';
 import { PodPreset, PresetMetric, PresetSize } from 'src/app/tools/classes/pod-preset';
 
 @Component({
@@ -8,8 +9,8 @@ import { PodPreset, PresetMetric, PresetSize } from 'src/app/tools/classes/pod-p
   styleUrls: ['./new-pod-window.component.css']
 })
 export class NewPodWindowComponent implements OnInit {
-
-  @Output() action = new EventEmitter<NewPodWindowAction>();
+  @Input() podDocuments: PodDocument [];
+  @Output() action = new EventEmitter<NewPodWindowActionData>();
 
   presets = [
     new PodPreset({
@@ -21,7 +22,7 @@ export class NewPodWindowComponent implements OnInit {
       name: "Wallpaper"
     }),
     new PodPreset({
-      presetSize: PresetSize.LONG,
+      presetSize: PresetSize.VERTICAL,
       w: 1080,
       h: 1920,
       ppi: 1,
@@ -123,7 +124,7 @@ export class NewPodWindowComponent implements OnInit {
       ppi: 72,
       type: PresetMetric.INCHES,
       name: "A10"
-    }),
+    })
   ];
 
   selectedPresetIndex = 0;
@@ -151,16 +152,59 @@ export class NewPodWindowComponent implements OnInit {
     heightInput.value = podPreset.h + "";
     let ppiInput = <HTMLInputElement>document.getElementById("pod-window-ppi-input");
     ppiInput.value = podPreset.ppi + "";
-
     let metricsSelect = <HTMLSelectElement>document.getElementById("pod-window-metrics-select");
     metricsSelect.value = podPreset.type;
   }
 
+  getDocumentMetaData() {
+    let widthInput = <HTMLInputElement>document.getElementById("pod-window-width-input");
+    let heightInput = <HTMLInputElement>document.getElementById("pod-window-height-input");
+    let ppiInput = <HTMLInputElement>document.getElementById("pod-window-ppi-input");
+    let metricsSelect = <HTMLSelectElement>document.getElementById("pod-window-metrics-select");
+    let nameInout = <HTMLInputElement>document.getElementById("pod-window-title-input");
+    let presetData = new PodPreset(
+      {
+        presetSize: null,
+        w: parseInt(widthInput.value),
+        h: parseInt(heightInput.value),
+        ppi: parseInt(ppiInput.value),
+        type: this.metricSelectValueToPresetMetric(metricsSelect.value),
+        name: null
+      }
+    );
+
+    return <PodDocMetaData> {
+      docName: nameInout.value,
+      podPreset: presetData
+    };
+  } 
+
+  metricSelectValueToPresetMetric(metrics: string): PresetMetric{
+    switch(metrics) {
+      case "px": return PresetMetric.PIXEL;
+      case "in": return PresetMetric.INCHES;
+    }
+    return PresetMetric.PIXEL;
+  }
+
   onCreateClick(){
-    this.action.emit(NewPodWindowAction.CREATE);
+    this.action.emit({
+      newPodWindowAction: NewPodWindowAction.CREATE,
+      podDocument: new PodDocument(this.getDocumentMetaData())
+    });
   }
   onCloseClick(){
-    this.action.emit(NewPodWindowAction.CLOSE);
+    this.action.emit({
+      newPodWindowAction: NewPodWindowAction.CREATE
+    });
+  }
+
+  hasPodDocuments(){
+    try {
+      return this.podDocuments.length > 0;
+    } catch (err) {
+      return false;
+    }
   }
 
 }
@@ -169,4 +213,9 @@ export class NewPodWindowComponent implements OnInit {
 export enum NewPodWindowAction {
   CREATE,
   CLOSE
+}
+
+export interface NewPodWindowActionData {
+  newPodWindowAction: NewPodWindowAction;
+  podDocument?: PodDocument;
 }

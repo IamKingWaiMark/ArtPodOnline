@@ -1,9 +1,11 @@
 import { isPlatformBrowser } from '@angular/common';
-import { Component, EventEmitter, Inject, OnInit, PLATFORM_ID } from '@angular/core';
+import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
 import { GlobalEvents, HotKey } from 'src/app/tools/classes/global-events';
+import { PodDocument } from 'src/app/tools/classes/pod-document';
 import { Swatch } from 'src/app/tools/classes/swatch';
 import { PodFileAction } from 'src/app/tools/pod-app-tools/pod-app-tools.component';
-import { NewPodWindowAction } from 'src/app/windows/new-pod-window/new-pod-window.component';
+import { NewPodWindowAction, NewPodWindowActionData } from 'src/app/windows/new-pod-window/new-pod-window.component';
 
 @Component({
   selector: 'app-pod',
@@ -12,24 +14,22 @@ import { NewPodWindowAction } from 'src/app/windows/new-pod-window/new-pod-windo
 })
 export class PodComponent implements OnInit {
   public readonly GLOBAL_EVENTS = new GlobalEvents();
-  public readonly CURSOR_GENERATOR: CursorGenerator = new CursorGenerator();
   public readonly FEATURE_INFO: FeatureInfo = new FeatureInfo();
+
   public readonly DEFAULTS = {
     POD_FEATURES: PodFeatures.MOVE
   }
-
-  layers: Layer[] = [];
   selectedPodFeature: PodFeatures = this.DEFAULTS.POD_FEATURES;
-
   showNewPodWindow = true;
 
+  podDocuments: PodDocument [] = [];
+  podDocumentsSubscription = new BehaviorSubject<PodDocument[]>(this.podDocuments);
 
   constructor(@Inject(PLATFORM_ID) private platform: Object) { }
 
   ngOnInit(): void {
 
     if(isPlatformBrowser(this.platform)) {
-      this.layers.push(new Layer(500, 500, "#FFFFFF", true));
       this.addWindowKeyEvents();
     }
   }
@@ -48,19 +48,24 @@ export class PodComponent implements OnInit {
       this.GLOBAL_EVENTS.GLOBAL_MOUSE_UP_EVENT.emit(ev);
     });
     window.addEventListener("keydown", (ev: KeyboardEvent) => {
-      ev.preventDefault();
-      ev.stopPropagation();
+      
+      
       let CTRL_KEY = (navigator.platform.match("Mac") ? ev.metaKey : ev.ctrlKey);
       if(CTRL_KEY && ev.shiftKey) {
-
+        ev.preventDefault();
+        ev.stopPropagation();
       } else if (CTRL_KEY && ev.altKey) {
+        ev.preventDefault();
+        ev.stopPropagation();
         switch(ev.key.toLowerCase()) {
           case "n": this.showNewPodWindow = true; break;
         }
       } else if (CTRL_KEY) { 
-        
+        ev.preventDefault();
+        ev.stopPropagation();
       } else if (ev.shiftKey) { 
-
+        ev.preventDefault();
+        ev.stopPropagation();
       } else {
         switch(ev.key.toLowerCase()) {
           case "x": this.GLOBAL_EVENTS.GLOBAL_HOT_KEY_EVENT.emit(HotKey.SWAP_SWATCH); break;
@@ -81,52 +86,24 @@ export class PodComponent implements OnInit {
     this.FEATURE_INFO.setShouldShowContextMenu(false);
   }
 
-  /*POD_DIV_onMouseOut() {
-    this.CURSOR_GENERATOR.resetPodCursor();
-  }
-
-  POD_DIV_onMouseMove(ev: MouseEvent, podDiv: HTMLDivElement, podCursor: HTMLSpanElement) {
-    switch (this.selectedPodFeature) {
-      case PodFeatures.MOVE: this.CURSOR_GENERATOR.genMoveCursor(ev, podDiv, podCursor); break;
-      case PodFeatures.BRUSH: this.CURSOR_GENERATOR.genBrushCursor(ev, podDiv, podCursor, this.FEATURE_INFO.getBrushSize()); break;
-      case PodFeatures.ERASER: this.CURSOR_GENERATOR.genEraserCursor(ev, podDiv, podCursor, this.FEATURE_INFO.getEraserSize()); break;
-    }
-  }
-  POD_DIV_onMouseDown(ev: MouseEvent){
-    switch(ev.button) {
-      case 0: break;
-      case 1: break;
-      case 2: break;
-    }
-  }
-  POD_DIV_onMouseUp(ev: MouseEvent){
-    switch(ev.button) {
-      case 0: break;
-      case 1: break;
-      case 2: break;
-    }
-  }
-  POD_DIV_onRightClick(ev: MouseEvent) {
-    if (this.selectedPodFeature) {
-      this.FEATURE_INFO.setMouseX(ev.x);
-      this.FEATURE_INFO.setMouseY(ev.y);
-      this.FEATURE_INFO.setShouldShowContextMenu(true);
-    }
-  }*/
-
-
-  /*
-    POD END
-  */
 
   /*
     NEW POD WINDOW
   */
-  onNewPodWindowAction(action: NewPodWindowAction) {
-    switch(action) {
+  onNewPodWindowAction(action: NewPodWindowActionData) {
+    switch(action.newPodWindowAction) {
+      case NewPodWindowAction.CREATE: this.showNewPodWindow = false; this.createNewDocument(action); break;
       case NewPodWindowAction.CLOSE: this.showNewPodWindow = false; break;
-      case NewPodWindowAction.CREATE: this.showNewPodWindow = false; break;
     }
+  }
+
+  createNewDocument(action: NewPodWindowActionData){
+    this.podDocuments.push(action.podDocument);
+    this.podDocumentsSubscription.next(this.podDocuments);
+  }
+
+  shouldShowNewPodWindow(){
+    return this.showNewPodWindow || (this.podDocuments && this.podDocuments.length <= 0);
   }
   /*
     NEW POD WINDOW END
@@ -151,41 +128,7 @@ export class PodComponent implements OnInit {
 
 
 
-export class Layer {
-  width: number;
-  height: number;
-  style: string = "";
-  constructor(width: number, height: number, backgroundColor: string, center?: boolean) {
-    this.width = width;
-    this.height = height;
-    this.style += `background-color: ${backgroundColor};`;
-    if (center) {
-      this.centerLayerInsidePodLayersDiv();
-    } else {
-
-    }
-    
-  }
-
-
-  private centerLayerInsidePodLayersDiv() {
-    try {
-      let podLayersDivDimensions = (<HTMLDivElement>document.getElementById("pod-layers")).getBoundingClientRect();
-      this.style += `left: ${(podLayersDivDimensions.width / 2) - (this.width / 2)}px; 
-                    top: ${(podLayersDivDimensions.height / 2) - (this.height / 2)}px`;
-    } catch (err) {
-
-    }
-  }
-
-
-}
-
-
-
-
-
-
+/*
 
 export class CursorGenerator {
   genMoveCursor(ev: MouseEvent, podDiv: HTMLDivElement, podCursor: HTMLSpanElement) {
@@ -232,7 +175,7 @@ export class CursorGenerator {
     return ev.y - podDiv.getBoundingClientRect().y - (circleSize / 2);
   }
 }
-
+*/
 export enum PodFeatures {
   MOVE = "MOVE",
   BRUSH = "BRUSH",

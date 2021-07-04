@@ -1,0 +1,26 @@
+.pod-document-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    display: grid;
+    grid-template-rows: 1fr 1em;
+}
+
+.pod-document-content-canvas {
+    overflow: auto;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+}
+
+.pod-document-content-footer {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color-dark) transparent transparent transparent;
+    border-width: 1px;
+    border-style: solid;
+}
