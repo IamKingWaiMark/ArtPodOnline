@@ -17,29 +17,9 @@
     border-color: transparent transparent var(--primary-color-dark) transparent;
     border-style: solid;
     border-width: 1px;
-    display: flex;
-    align-items: center;
-    color: white;
-    font-size: .8em;
-    overflow: hidden;
+
 }
 
-#pod-app-tools span:nth-child(1) {
-    margin-left: .5em;
-}
-
-#pod-app-tools span {
-    margin: 0 .25em;
-    background-color: #535353;
-    border: 1px solid #535353;
-    padding: .25em .5em;
-    border-radius: 3px;
-}
-
-#pod-app-tools span:hover {
-    border: 1px solid white;
-    background-color: #424242;
-}
 
 #pod-tools {
     grid-column: 1 / 4;

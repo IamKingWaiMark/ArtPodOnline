@@ -1,8 +1,9 @@
 <div id="pod-page" >
     <div id="pod-app-tools">
-        <img src="assets/codieble_256.png" width="16" height="16" style="margin: 0 .5em;">
-        <span>File</span>
-        <span>Edit</span>
+        <app-pod-app-tools 
+            [GLOBAL_EVENTS]="GLOBAL_EVENTS"
+            (FILE_ACTIONS)="onFileActionReceived($event)"
+        ></app-pod-app-tools>
     </div>
     <div id="pod-tools">
 

@@ -2,6 +2,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { Component, EventEmitter, Inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { GlobalEvents, HotKey } from 'src/app/tools/classes/global-events';
 import { Swatch } from 'src/app/tools/classes/swatch';
+import { PodFileAction } from 'src/app/tools/pod-app-tools/pod-app-tools.component';
 import { NewPodWindowAction } from 'src/app/windows/new-pod-window/new-pod-window.component';
 
 @Component({
@@ -37,6 +38,9 @@ export class PodComponent implements OnInit {
     window.oncontextmenu = () => {
       return false;
     }
+    window.addEventListener("mousedown", (ev: MouseEvent) => {
+      this.GLOBAL_EVENTS.GLOBAL_MOUSE_DOWN_EVENT.emit(ev);
+    });
     window.addEventListener("mousemove", (ev: MouseEvent) => {
       this.GLOBAL_EVENTS.GLOBAL_MOUSE_MOVE_EVENT.emit(ev);
     });
@@ -126,6 +130,20 @@ export class PodComponent implements OnInit {
   }
   /*
     NEW POD WINDOW END
+  */
+
+  /*
+    POD TOOL
+  */
+  onFileActionReceived(fileAction: PodFileAction) {
+    switch(fileAction) {
+      case PodFileAction.NEW:
+        this.showNewPodWindow = true;
+        break;
+    }
+  }
+  /*
+    POD TOOL END
   */
 
 }

@@ -30,6 +30,7 @@ export class PodPreset {
         switch(presetSize) {
             case PresetSize.LONG: return "assets/icons/long_folder.png";
             case PresetSize.SMALL: return "assets/icons/short_folder.png";
+            case PresetSize.VERTICAL: return "assets/icons/verticle_folder.png"
         }
     }
 
@@ -37,7 +38,8 @@ export class PodPreset {
 
 export enum PresetSize {
     SMALL,
-    LONG
+    LONG,
+    VERTICAL
 }
 
 export enum PresetMetric {
