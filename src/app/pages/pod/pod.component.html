@@ -19,7 +19,7 @@
     </div>
 
     <div id="pod" #pod>
-        <app-new-pod-window></app-new-pod-window>
+        <app-new-pod-window *ngIf="showNewPodWindow" (action)="onNewPodWindowAction($event)"></app-new-pod-window>
     </div>
     <!--
     <div id="pod" #pod 

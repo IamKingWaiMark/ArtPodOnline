@@ -1,0 +1,9 @@
+<div [ngClass]="{'pod-preset': true, 'pod-preset-selected': selected}" (click)="onPresetClick()">
+    <div style="padding: 1em;">
+        <div>
+            <img [src]="preset?.presetImgUrl" width="128px">
+        </div>
+        <p>{{preset?.name}}</p>
+        <p>{{getDimensions()}}</p>
+    </div>
+</div>
