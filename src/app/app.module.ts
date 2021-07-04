@@ -11,6 +11,7 @@ import { PodFeatureContextMenuComponent } from './tools/pod-feature-context-menu
 import { MatSliderModule } from '@angular/material/slider';
 import { ColorPickerComponent } from './tools/color-picker/color-picker.component';
 import { NewPodWindowComponent } from './windows/new-pod-window/new-pod-window.component';
+import { PodPresetComponent } from './tools/pod-preset/pod-preset.component';
 
 @NgModule({
   declarations: [
@@ -19,7 +20,8 @@ import { NewPodWindowComponent } from './windows/new-pod-window/new-pod-window.c
     LayerComponent,
     PodFeatureContextMenuComponent,
     ColorPickerComponent,
-    NewPodWindowComponent
+    NewPodWindowComponent,
+    PodPresetComponent
   ],
   imports: [
     BrowserModule.withServerTransition({ appId: 'serverApp' }),

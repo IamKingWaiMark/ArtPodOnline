@@ -2,6 +2,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { Component, EventEmitter, Inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { GlobalEvents, HotKey } from 'src/app/tools/classes/global-events';
 import { Swatch } from 'src/app/tools/classes/swatch';
+import { NewPodWindowAction } from 'src/app/windows/new-pod-window/new-pod-window.component';
 
 @Component({
   selector: 'app-pod',
@@ -18,6 +19,8 @@ export class PodComponent implements OnInit {
 
   layers: Layer[] = [];
   selectedPodFeature: PodFeatures = this.DEFAULTS.POD_FEATURES;
+
+  showNewPodWindow = true;
 
 
   constructor(@Inject(PLATFORM_ID) private platform: Object) { }
@@ -41,10 +44,17 @@ export class PodComponent implements OnInit {
       this.GLOBAL_EVENTS.GLOBAL_MOUSE_UP_EVENT.emit(ev);
     });
     window.addEventListener("keydown", (ev: KeyboardEvent) => {
-      if(ev.ctrlKey && ev.shiftKey) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      let CTRL_KEY = (navigator.platform.match("Mac") ? ev.metaKey : ev.ctrlKey);
+      if(CTRL_KEY && ev.shiftKey) {
 
-      } else if (ev.ctrlKey) { 
-
+      } else if (CTRL_KEY && ev.altKey) {
+        switch(ev.key.toLowerCase()) {
+          case "n": this.showNewPodWindow = true; break;
+        }
+      } else if (CTRL_KEY) { 
+        
       } else if (ev.shiftKey) { 
 
       } else {
@@ -105,8 +115,18 @@ export class PodComponent implements OnInit {
     POD END
   */
 
-
-
+  /*
+    NEW POD WINDOW
+  */
+  onNewPodWindowAction(action: NewPodWindowAction) {
+    switch(action) {
+      case NewPodWindowAction.CLOSE: this.showNewPodWindow = false; break;
+      case NewPodWindowAction.CREATE: this.showNewPodWindow = false; break;
+    }
+  }
+  /*
+    NEW POD WINDOW END
+  */
 
 }
 

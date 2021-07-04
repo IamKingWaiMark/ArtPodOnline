@@ -1,0 +1,21 @@
+.pod-preset {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 15em;
+    text-align: center;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    cursor: pointer;
+}
+
+.pod-preset:hover {
+    border: 3px solid var(--primary-button-color);
+    border-radius: 5px;
+}
+
+.pod-preset-selected {
+    border: 3px solid var(--primary-button-color);
+    border-radius: 5px;
+}

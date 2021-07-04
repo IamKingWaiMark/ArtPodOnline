@@ -8,5 +8,6 @@ export class GlobalEvents {
 }
 
 export enum HotKey {
-    SWAP_SWATCH
-  }
+    SWAP_SWATCH,
+    NEW_POD
+}

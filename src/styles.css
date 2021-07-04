@@ -1,9 +1,11 @@
 /* You can add global styles to this file, and also import other style files */
 :root {
     --primary-button-color: #1473e6;
+    --primary-button-pressed-color: #0d66d0;
     --primary-color: #535353;
     --primary-color-accent: #323232;
     --primary-color-dark: #282828;
+    --disabled-color: #4d4d4d;
 }
 html, body { height: 100%;    user-select: none;
     -moz-user-select: none;
@@ -13,17 +15,46 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
 .round-button {
     border-radius: 50px;
-    padding: 1em;
+    padding: .5em;
+
 }
 
 .primary-button {
     border: 2px solid var(--primary-button-color);
     background-color: var(--primary-button-color);
     color: white;
+    cursor: pointer;
+}
+
+.primary-button:hover, .primary-button:active {
+    border: 2px solid var(--primary-button-pressed-color);
+    background-color: var(--primary-button-pressed-color);
+    color: white;
+}
+
+.secondary-button:disabled, .primary-button:disabled {
+    background-color: var(--disabled-color);
+    border-color: var(--disabled-color);
+    color: rgb(168, 168, 168);
 }
 
 .secondary-button {
     border: 2px solid white;
     background-color: var(--primary-color-accent);
     color: white;
+}
+
+.secondary-button:hover, .secondary-button:active {
+    border: 2px solid white;
+    background-color: white;
+    color: var(--primary-color-accent);
+}
+
+
+
+.dark-input {
+    border: 1px solid white;
+    background-color: var(--primary-color-dark);
+    color: white;
+    outline: none;
 }

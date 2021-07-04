@@ -1,21 +1,40 @@
 <div id="pod-window">
-    <div style="background-color: yellow;">
-
+    <div id="pod-window-box-1">
+        <span class="pod-window-template-title">Templates</span>
+        <app-pod-preset *ngFor="let preset of presets; index as i" 
+        [preset]="preset" [selected]="i == selectedPresetIndex"
+        (click)="onPresetClick(i)"
+        (value)="onPresetValueReceived($event)">
+        </app-pod-preset>
     </div>
     <div id="pod-window-box-2">
         <!--Pod Title Input-->
-        <div>
-            <input class="pod-title-input" placeholder="Untitled" value="Untitled">
-        </div>
-        <div>
-            
-        </div>
+        <input class="pod-title-input" placeholder="Untitled" value="Untitled">
+
+        <div class="label"><span>Width</span></div>
+        <span></span>
+
+        <input id="pod-window-width-input" class="dark-input" type="number" min="1" max="5000" value="1">
+        <select id="pod-window-metrics-select" class="dark-input" name="pod-window-metrics-select">
+            <option value="px">Pixels</option>
+            <option value="in">Inches</option>
+        </select>
+
+        <div class="label"><span>Height</span></div>
+        <span></span>
+
+        <input id="pod-window-height-input" class="dark-input" type="number" min="1" max="5000" value="1">
+        <span></span>
+
+        <div class="label"><span>Pixels/Inch</span></div>
+        <span></span>
+        <input id="pod-window-ppi-input" class="dark-input" type="number" min="1" max="5000" value="1">
     </div>
-    <div style="background-color: orange;">
+    <div id="pod-window-box-3">
 
     </div>
-    <div id="pod-window-box-4" >
-        <button class="round-button primary-button" style="margin-right: 1em;">Create</button>
-        <button class="round-button secondary-button">Close</button>
+    <div id="pod-window-box-4">
+        <button (click)="onCreateClick()" class="round-button primary-button" style="margin-right: 1em;">Create</button>
+        <button (click)="onCloseClick()" class="round-button secondary-button">Close</button>
     </div>
 </div>
