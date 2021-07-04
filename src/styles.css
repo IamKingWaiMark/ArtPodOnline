@@ -13,6 +13,9 @@ html, body { height: 100%;    user-select: none;
     -webkit-user-select: none; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
+button {
+    cursor: pointer;
+}
 
 .round-button {
     border-radius: 50px;
@@ -24,7 +27,6 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     border: 2px solid var(--primary-button-color);
     background-color: var(--primary-button-color);
     color: white;
-    cursor: pointer;
 }
 
 .primary-button:hover, .primary-button:active {
@@ -33,7 +35,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     color: white;
 }
 
-.secondary-button:disabled, .primary-button:disabled {
+.secondary-button:disabled, .primary-button:disabled, .secondary-button:disabled:hover, .primary-button:disabled:hover {
     background-color: var(--disabled-color);
     border-color: var(--disabled-color);
     color: rgb(168, 168, 168);
@@ -60,10 +62,10 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     outline: none;
 }
 
-/* width */
+
 ::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
+    width: 7px;
+    height: 7px;
 }
   
 /* Track */

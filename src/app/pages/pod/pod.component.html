@@ -20,21 +20,10 @@
     </div>
 
     <div id="pod" #pod>
-        <app-new-pod-window *ngIf="showNewPodWindow" (action)="onNewPodWindowAction($event)"></app-new-pod-window>
+        <app-pod-document-controller [podDocumentsSubscription]="podDocumentsSubscription"></app-pod-document-controller>
+        <app-new-pod-window *ngIf="shouldShowNewPodWindow()" (action)="onNewPodWindowAction($event)" [podDocuments]="podDocuments"></app-new-pod-window>
     </div>
-    <!--
-    <div id="pod" #pod 
-        (contextmenu)="POD_DIV_onRightClick($event)" 
-        (mousemove)="POD_DIV_onMouseMove($event, pod, podCursor)"
-        (mouseout)="POD_DIV_onMouseOut()"
-        (mousedown)="POD_DIV_onMouseDown($event)"
-        (mouseup)="POD_DIV_onMouseUp($event)">
 
-        
-        <span id="pod-cursor" #podCursor></span>
-        <pod-feature-context-menu [featureInfo]="FEATURE_INFO" [currentFeature]="selectedPodFeature" [podDiv]="pod"></pod-feature-context-menu>
-    </div>
-    -->
     <div id="pod-right-pane">
         <color-picker [GLOBAL_EVENTS]="GLOBAL_EVENTS" (selectedColor)="FEATURE_INFO?.setBrushColor($event)"></color-picker>
     </div>

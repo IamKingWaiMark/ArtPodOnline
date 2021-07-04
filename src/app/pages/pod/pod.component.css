@@ -66,6 +66,7 @@ mat-button-toggle-group mat-button-toggle {
     border-color: transparent transparent transparent var(--primary-color-dark);
     border-style: solid;
     border-width: 1px;
+    overflow: hidden;
 }
 
 #pod {
@@ -73,21 +74,11 @@ mat-button-toggle-group mat-button-toggle {
     box-sizing: border-box;
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
-    overflow: hidden;
     position: relative;
+    overflow: hidden;
 }
 /*
-#pod {
-    background-color: #282828;
-    display: grid;
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr 1em;
-    box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    -webkit-box-sizing: border-box;
-    overflow: hidden;
-    position: relative;
-}
+
 #pod-cursor {
     position: absolute;
     mix-blend-mode: difference;
@@ -103,10 +94,7 @@ mat-button-toggle-group mat-button-toggle {
     overflow: hidden;
 }
 
-#pod-footer {
-    background-color: #535353;
-    height: 100%;
-}*/
+*/
 
 
 

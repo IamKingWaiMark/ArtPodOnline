@@ -73,3 +73,7 @@
     color: var(--primary-context-menu-bg);
 }
 
+hr {
+    padding: 0;
+    margin: 0;
+}

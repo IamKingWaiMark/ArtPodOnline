@@ -30,7 +30,6 @@ export class PodAppToolsComponent implements OnInit {
         for(let i = 0; i < actionLists.length; i++) {
           let actionList = <HTMLDivElement>actionLists[i];
           let dimensions = actionList.getBoundingClientRect();
-          console.log(ev.x + ", " + dimensions.x);
           if(ev.x >= dimensions.x && ev.x <= dimensions.x + dimensions.width &&
             ev.y >= dimensions.y && ev.y <= dimensions.y + dimensions.height) {
               clickedOutside = false;
