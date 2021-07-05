@@ -66,7 +66,13 @@ mat-button-toggle-group mat-button-toggle {
     border-color: transparent transparent transparent var(--primary-color-dark);
     border-style: solid;
     border-width: 1px;
-    overflow: hidden;
+    overflow: auto;
+    display: grid;
+    height: 100%;
+    grid-template-columns: 1fr;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
 }
 
 #pod {

@@ -11,5 +11,6 @@ export class GlobalEvents {
 
 export enum HotKey {
     SWAP_SWATCH,
-    NEW_POD
+    NEW_POD,
+    MOVE_POD_CANVAS
 }

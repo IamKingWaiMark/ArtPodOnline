@@ -1,11 +1,15 @@
 .feature-context-menu {
     box-shadow: 0 0 2px 1px rgba(54, 54, 54, 0.26);
-    padding: .5em;
-    background-color: #535353;
-    border: 2px solid #282828;;
-    min-width: 10em;
+    padding: 1em;
+    background-color: var(--primary-color);
+    border: 2px solid var(--primary-color-accent);
+    min-width: 15em;
+    max-width: 15em;
     color: white;
     cursor: context-menu;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
 }
 
 button {
@@ -19,11 +23,27 @@ mat-slider {
 
 .feature-label {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 4em 1em;
+    column-gap: .5em;
+    font-size: .8em;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
 }
 
-.feature-input {
-    font-size: .75em;
+.feature-label span {
+    display: flex;
+    align-items: center;
+}
+
+.feature-label input {
+    width: 100%;
+    color: white;
+    background-color: var(--primary-color-accent);
+    border: 1px solid var(--primary-context-menu-bg);
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
 }
 
 /* Remove arrows Chrome, Safari, Edge, Opera */

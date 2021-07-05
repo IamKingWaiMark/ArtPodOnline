@@ -1,6 +1,8 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Component, Inject, Input, OnInit, PLATFORM_ID } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { FeatureInfo, PodFeatures } from 'src/app/pages/pod/pod.component';
+import { GlobalEvents } from 'src/app/tools/classes/global-events';
 import { PodDocument } from 'src/app/tools/classes/pod-document';
 
 @Component({
@@ -10,6 +12,10 @@ import { PodDocument } from 'src/app/tools/classes/pod-document';
 })
 export class PodDocumentControllerComponent implements OnInit {
   @Input() podDocumentsSubscription: BehaviorSubject<PodDocument[]>;
+  @Input() selectedPodFeatureSubscription: BehaviorSubject<PodFeatures>;
+  @Input() FEATURE_INFO: FeatureInfo;
+  @Input() GLOBAL_EVENTS: GlobalEvents;
+  
   podDocuments: PodDocument [];
   activeTabIndex = 0;
   activePodDocumentSubscription = new BehaviorSubject<PodDocument>(null);
@@ -47,6 +53,7 @@ export class PodDocumentControllerComponent implements OnInit {
       this.activeTabIndex = this.activeTabIndex < 0? 0: this.activeTabIndex;
     } else {
       this.activeTabIndex--;
+      this.activeTabIndex = this.activeTabIndex < 0? 0: this.activeTabIndex;
     }
     this.activePodDocumentSubscription.next(this.getCurrentPodDocument());
   }
@@ -54,4 +61,9 @@ export class PodDocumentControllerComponent implements OnInit {
   getCurrentPodDocument(){
     return this.podDocuments[this.activeTabIndex];
   }
+
+
+
 }
+
+

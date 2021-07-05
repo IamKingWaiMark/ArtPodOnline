@@ -1,5 +1,5 @@
 import { isPlatformBrowser } from '@angular/common';
-import { Component, EventEmitter, Inject, Input, OnInit, PLATFORM_ID } from '@angular/core';
+import { Component, Inject, Input, OnInit, PLATFORM_ID } from '@angular/core';
 import { MatSliderChange } from '@angular/material/slider';
 import { FeatureInfo, PodFeatures } from 'src/app/pages/pod/pod.component';
 
@@ -10,9 +10,15 @@ import { FeatureInfo, PodFeatures } from 'src/app/pages/pod/pod.component';
   styleUrls: ['./pod-feature-context-menu.component.css']
 })
 export class PodFeatureContextMenuComponent implements OnInit {
-  @Input() featureInfo: FeatureInfo;
+  @Input() FEATURE_INFO: FeatureInfo;
   @Input() currentFeature: PodFeatures;
-  @Input() podDiv: HTMLDivElement;
+  @Input() container: HTMLDivElement;
+
+  readonly MAX_BRUSH_SIZE = 1000;
+  readonly MIN_BRUSH_SIZE = 1;
+  readonly MAX_ERASER_SIZE = 1000;
+  readonly MIN_ERASER_SIZE = 1;
+
 
   BRUSH_FEATURE: BrushFeatureContextMenu;
   ERASER_FEATURE: EraserFeatureContextMenu;
@@ -24,23 +30,22 @@ export class PodFeatureContextMenuComponent implements OnInit {
 
   ngOnInit(): void {
     if(isPlatformBrowser(this.platform)) {
-      this.BRUSH_FEATURE = new BrushFeatureContextMenu(this.featureInfo);
-      this.ERASER_FEATURE = new EraserFeatureContextMenu(this.featureInfo);
-      this.addEventListenerToPodDiv();
+      this.BRUSH_FEATURE = new BrushFeatureContextMenu(this.FEATURE_INFO);
+      this.ERASER_FEATURE = new EraserFeatureContextMenu(this.FEATURE_INFO);
+      this.addEventListenerToContainerDiv();
     }
   }
 
-  private addEventListenerToPodDiv(){
-    this.podDiv.addEventListener("click", (ev) => {
+  private addEventListenerToContainerDiv(){
+    this.container.addEventListener("click", (ev: MouseEvent) => {
       let activeContextMenu = <HTMLDivElement>document.querySelector(".feature-context-menu");
       if(!activeContextMenu) return;
-
       let contextMenuDimension = activeContextMenu.getBoundingClientRect();
       if(!(ev.x > contextMenuDimension.x && ev.x < contextMenuDimension.x + contextMenuDimension.width &&
           ev.y > contextMenuDimension.y && ev.y < contextMenuDimension.y + contextMenuDimension.height
         )) {
-          if(this.featureInfo.getShouldShowContextMenu()) this.featureInfo.setShouldShowContextMenu(false);
-      }
+          if(this.FEATURE_INFO.getShouldShowContextMenu()) this.FEATURE_INFO.setShouldShowContextMenu(false);
+      } 
     });
   }
 
@@ -54,9 +59,10 @@ export class PodFeatureContextMenuComponent implements OnInit {
     return this.currentFeature == PodFeatures.ERASER;
   }
   getStyle(){
-    return `left: ${this.featureInfo.getMouseX() - this.podDiv.getBoundingClientRect().x}px; 
-            top: ${this.featureInfo.getMouseY() - this.podDiv.getBoundingClientRect().y}px; 
-            position: absolute`;
+    if(!this.container) return "";
+    return `left: ${this.FEATURE_INFO.getMouseX() - this.container.getBoundingClientRect().x}px; 
+            top: ${this.FEATURE_INFO.getMouseY() - this.container.getBoundingClientRect().y}px; 
+            position: absolute;`;
   }
 
 
@@ -66,17 +72,46 @@ export class PodFeatureContextMenuComponent implements OnInit {
       case PodFeatures.ERASER: this.ERASER_FEATURE.onSizeSliderChanged(event); break;
     }
   }
-  SIZE_SLIDER_INPUT_onChange(input: HTMLInputElement) {
-    let size = parseInt(input.value);
-    if(size && size > 1000) { 
-      size = 1000;
-      input.value = `${size}`;
-      this.featureInfo.setBrushSize(size);
-    } else if(size) {
-      this.featureInfo.setBrushSize(size);
+  SIZE_SLIDER_INPUT_onKeyUp(input: HTMLInputElement) {
+    let featureMetadata = this.getFeatureMetaData();
+    var size = featureMetadata.value;
+    try {
+      let inputValue = parseInt(input.value);
+      size = inputValue;
+    } catch (err) {}
+
+    if(size && size >= featureMetadata.max) { 
+      size = featureMetadata.max;
+    } else if(size <= featureMetadata.min) {
+      size = featureMetadata.min;
+    } 
+    this.setFeatureValue(size);
+    input.value = `${size}`;
+  }
+
+
+  setFeatureValue(value: any){
+    switch(this.currentFeature) {
+      case PodFeatures.BRUSH: this.FEATURE_INFO.setBrushSize(value); break;
+      case PodFeatures.ERASER: this.FEATURE_INFO.setEraserSize(value); break;
     }
   }
 
+
+  getFeatureMetaData(){
+    var metadata = {value: 0, min: 0, max: 0};
+    switch(this.currentFeature) {
+      case PodFeatures.BRUSH:  
+        metadata.value = this.FEATURE_INFO.getBrushSize();
+        metadata.min = this.MIN_BRUSH_SIZE;
+        metadata.max = this.MAX_BRUSH_SIZE;
+      case PodFeatures.ERASER:  
+        metadata.value = this.FEATURE_INFO.getEraserSize();
+        metadata.min = this.MIN_ERASER_SIZE;
+        metadata.max = this.MAX_ERASER_SIZE;
+    }
+    return metadata;
+  }
 }
 
 export class BrushFeatureContextMenu {
