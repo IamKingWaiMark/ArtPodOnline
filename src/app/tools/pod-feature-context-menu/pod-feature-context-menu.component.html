@@ -1,15 +1,18 @@
-<div *ngIf="featureInfo?.getShouldShowContextMenu()" [style]="getStyle()">
+<div *ngIf="FEATURE_INFO?.getShouldShowContextMenu()" [style]="getStyle()">
 
      <!------------- BRUSH ------------------------->
 
     <div class="feature-context-menu" *ngIf="isFeatureBrush()">
         <div>
             <div class="feature-label">
-                <span>Size</span>
-                <input #brushSizeInput (keyup)="SIZE_SLIDER_INPUT_onChange(brushSizeInput)" [value]="featureInfo.brushSize" class="feature-input" type="number" min="0" max="1000">
+                <span>Size:</span>
+                <input class="feature-input"  #brushSizeInput (keyup)="SIZE_SLIDER_INPUT_onKeyUp(brushSizeInput)" 
+                [value]="FEATURE_INFO?.getBrushSize()" 
+                    type="number" min="MIN_BRUSH_SIZE" [max]="MAX_BRUSH_SIZE">
+                <span>px</span>
             </div>
-            <mat-slider [value]="featureInfo.brushSize" step="1" min="0" max="1000" aria-label="units"
-                (change)="SIZE_SLIDER_onChange($event)"></mat-slider>
+            <mat-slider [value]="FEATURE_INFO?.getBrushSize()" step="1" [min]="MIN_BRUSH_SIZE" [max]="MAX_BRUSH_SIZE" aria-label="units"
+                (input)="SIZE_SLIDER_onChange($event)"></mat-slider>
         </div>
     </div>
 
@@ -19,11 +22,12 @@
     <div class="feature-context-menu" *ngIf="isFeatureEraser()">
         <div>
             <div class="feature-label">
-                <span>Size</span>
-                <input #eraserSizeInput (keyup)="SIZE_SLIDER_INPUT_onChange(eraserSizeInput)" [value]="featureInfo.eraserSize" class="feature-input" type="number" min="0" max="1000">
+                <span>Size:</span>
+                <input class="feature-input" #eraserSizeInput (keyup)="SIZE_SLIDER_INPUT_onKeyUp(eraserSizeInput)" [value]="FEATURE_INFO?.getEraserSize()" 
+                 type="number" [min]="MIN_ERASER_SIZE" [max]="MAX_ERASER_SIZE">
             </div>
-            <mat-slider [value]="featureInfo.eraserSize" step="1" min="0" max="1000" aria-label="units"
-                (change)="SIZE_SLIDER_onChange($event)"></mat-slider>
+            <mat-slider [value]="FEATURE_INFO?.getEraserSize()" step="1" [min]="MIN_ERASER_SIZE" [max]="MAX_ERASER_SIZE" aria-label="units"
+                (input)="SIZE_SLIDER_onChange($event)"></mat-slider>
         </div>
     </div>
 </div>

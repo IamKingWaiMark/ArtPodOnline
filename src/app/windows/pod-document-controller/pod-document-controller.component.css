@@ -78,10 +78,5 @@
 
 
 .controller-content {
-    height: 100%;
-    max-height: 100%;
-    display: grid;
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr 1em;
-    
+    position: relative; 
 }

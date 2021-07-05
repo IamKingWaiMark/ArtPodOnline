@@ -1,8 +1,28 @@
 <div class="pod-document-content">
-    <div class="pod-document-content-canvas">
+    <div #podDocContentContainer class="pod-document-content-container"
+        (mousedown)="CONTENT_CONTAINER_onMouseDown($event)"
+    >
+
+        <div 
+            class="pod-document-content-canvas-container"
+            (mousemove)="CANVAS_CONTAINER_onMouseMove($event)"
+            (mouseout)="CANVAS_CONTAINER_onMouseOut($event)">
+            <div class="pod-document-canvas-frame">
+
+            </div>
+        </div>
+
+        <pod-feature-context-menu
+            [FEATURE_INFO]="FEATURE_INFO"
+            [currentFeature]="selectedPodFeature"
+            [container]="podDocContentContainer"
+        ></pod-feature-context-menu>
         
+        <div id="pod-document-cursor"></div>
+
     </div>
     <div class="pod-document-content-footer">
         
     </div>
 </div>
+

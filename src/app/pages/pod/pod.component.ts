@@ -19,7 +19,9 @@ export class PodComponent implements OnInit {
   public readonly DEFAULTS = {
     POD_FEATURES: PodFeatures.MOVE
   }
-  selectedPodFeature: PodFeatures = this.DEFAULTS.POD_FEATURES;
+
+  featureInfoSubscription = new BehaviorSubject<FeatureInfo>(this.FEATURE_INFO);
+  selectedPodFeatureSubscription = new BehaviorSubject<PodFeatures>(this.DEFAULTS.POD_FEATURES);
   showNewPodWindow = true;
 
   podDocuments: PodDocument [] = [];
@@ -69,6 +71,7 @@ export class PodComponent implements OnInit {
       } else {
         switch(ev.key.toLowerCase()) {
           case "x": this.GLOBAL_EVENTS.GLOBAL_HOT_KEY_EVENT.emit(HotKey.SWAP_SWATCH); break;
+          case " ": this.GLOBAL_EVENTS.GLOBAL_HOT_KEY_EVENT.emit(HotKey.MOVE_POD_CANVAS); break;
         }
       }
       this.GLOBAL_EVENTS.GLOBAL_KEYDOWN_EVENT.emit(ev);
@@ -79,9 +82,9 @@ export class PodComponent implements OnInit {
   */
   onFeatureChanged(selectedFeature: string) {
     switch (selectedFeature) {
-      case "MOVE": this.selectedPodFeature = PodFeatures.MOVE; break;
-      case "BRUSH": this.selectedPodFeature = PodFeatures.BRUSH; break;
-      case "ERASER": this.selectedPodFeature = PodFeatures.ERASER; break;
+      case "MOVE": this.selectedPodFeatureSubscription.next(PodFeatures.MOVE); break;
+      case "BRUSH": this.selectedPodFeatureSubscription.next(PodFeatures.BRUSH); break;
+      case "ERASER": this.selectedPodFeatureSubscription.next(PodFeatures.ERASER); break;
     }
     this.FEATURE_INFO.setShouldShowContextMenu(false);
   }
@@ -126,56 +129,6 @@ export class PodComponent implements OnInit {
 }
 
 
-
-
-/*
-
-export class CursorGenerator {
-  genMoveCursor(ev: MouseEvent, podDiv: HTMLDivElement, podCursor: HTMLSpanElement) {
-    podDiv.style.cursor = "context-menu";
-  }
-  genBrushCursor(ev: MouseEvent, podDiv: HTMLDivElement, podCursor: HTMLSpanElement, brushSize: number) {
-    podDiv.style.cursor = "none";
-    podCursor.style.opacity = "1";
-    podCursor.style.left = `${this.centerPodCursorToMouseX(ev, podDiv, brushSize)}px`;
-    podCursor.style.top = `${this.centerPodCursorToMouseY(ev, podDiv, brushSize)}px`;
-    podCursor.style.borderWidth = "1px";
-    podCursor.style.borderColor = "white";
-    podCursor.style.borderStyle = "solid";
-    podCursor.style.borderRadius = "50%";
-    podCursor.style.width = `${brushSize}px`;
-    podCursor.style.height = `${brushSize}px`;
-  }
-  genEraserCursor(ev: MouseEvent, podDiv: HTMLDivElement, podCursor: HTMLSpanElement, eraserSize: number) {
-    podDiv.style.cursor = "none";
-    podCursor.style.opacity = "1";
-    podCursor.style.left = `${this.centerPodCursorToMouseX(ev, podDiv, eraserSize)}px`;
-    podCursor.style.top = `${this.centerPodCursorToMouseY(ev, podDiv, eraserSize)}px`;
-    podCursor.style.borderWidth = "1px";
-    podCursor.style.borderColor = "white";
-    podCursor.style.borderStyle = "solid";
-    podCursor.style.borderRadius = "50%";
-    podCursor.style.width = `${eraserSize}px`;
-    podCursor.style.height = `${eraserSize}px`;
-  }
-
-
-  resetPodCursor() {
-    let podCursor = <HTMLSpanElement>document.getElementById("pod-cursor");
-    let podDiv = <HTMLDivElement>document.getElementById("pod");
-    podCursor.style.opacity = "0";
-    podDiv.style.cursor = "context-menu";
-
-  }
-
-  centerPodCursorToMouseX(ev: MouseEvent, podDiv: HTMLDivElement, circleSize: number) {
-    return ev.x - podDiv.getBoundingClientRect().x - (circleSize / 2);
-  }
-  centerPodCursorToMouseY(ev: MouseEvent, podDiv: HTMLDivElement, circleSize: number) {
-    return ev.y - podDiv.getBoundingClientRect().y - (circleSize / 2);
-  }
-}
-*/
 export enum PodFeatures {
   MOVE = "MOVE",
   BRUSH = "BRUSH",

@@ -11,8 +11,12 @@
 
         </div>
     </div>
-    <div style="position: relative; box-sizing: border-box; -moz-box-sizing: border-box; -webkit-box-sizing: border-box;">
-        <app-pod-document></app-pod-document>
+    <div class="controller-content">
+        <app-pod-document 
+        [FEATURE_INFO]="FEATURE_INFO"
+        [selectedPodFeatureSubscription]="selectedPodFeatureSubscription"
+        [activePodDocumentSubscription]="activePodDocumentSubscription"
+        [GLOBAL_EVENTS]="GLOBAL_EVENTS"></app-pod-document>
     </div>
 
 </div>
