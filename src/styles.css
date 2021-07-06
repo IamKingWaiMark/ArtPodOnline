@@ -3,10 +3,11 @@
     --primary-button-color: #1473e6;
     --primary-button-pressed-color: #0d66d0;
     --primary-color: #535353;
-    --primary-color-accent: #323232;
+    --primary-color-accent: #424242;
     --primary-color-dark: #282828;
     --disabled-color: #4d4d4d;
     --primary-context-menu-bg: #f0f0f0;
+    --app-fade-text: #b8b8b8;
 }
 html, body { height: 100%;    user-select: none;
     -moz-user-select: none;

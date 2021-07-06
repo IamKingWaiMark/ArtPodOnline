@@ -53,9 +53,15 @@ export class PodComponent implements OnInit {
       
       
       let CTRL_KEY = (navigator.platform.match("Mac") ? ev.metaKey : ev.ctrlKey);
-      if(CTRL_KEY && ev.shiftKey) {
+      if(CTRL_KEY && ev.shiftKey && ev.altKey) {
         ev.preventDefault();
         ev.stopPropagation();
+      } else if(CTRL_KEY && ev.shiftKey) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        switch(ev.key.toLowerCase()) {
+          case "s": break;
+        }
       } else if (CTRL_KEY && ev.altKey) {
         ev.preventDefault();
         ev.stopPropagation();

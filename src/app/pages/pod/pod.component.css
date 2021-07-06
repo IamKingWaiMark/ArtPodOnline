@@ -4,7 +4,7 @@
     background-color: var(--primary-color);
     display: grid;
     grid-template-columns: 3em 1fr 20em;
-    grid-template-rows: 2em 3em 1fr;
+    grid-template-rows: 2em 2.5em 1fr;
     box-sizing: border-box;
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
@@ -70,9 +70,13 @@ mat-button-toggle-group mat-button-toggle {
     display: grid;
     height: 100%;
     grid-template-columns: 1fr;
+    grid-template-rows: 18em 1fr;
+
     box-sizing: border-box;
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
+    padding-left: 1px;
+    row-gap: 1px;
 }
 
 #pod {

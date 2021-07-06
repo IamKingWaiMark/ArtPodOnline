@@ -74,6 +74,12 @@ export class PodAppToolsComponent implements OnInit {
       case "file":
         this.FILE_ACTIONS.emit(PodFileAction.NEW);
         break;
+      case "save_as":
+          this.FILE_ACTIONS.emit(PodFileAction.SAVE_AS);
+        break;
+      case "import":
+          this.FILE_ACTIONS.emit(PodFileAction.IMPORT);
+        break;
     }
     this.activePodTool = null;
   }
@@ -95,7 +101,9 @@ export enum ActivePodTool {
 }
 
 export enum PodFileAction {
-  NEW
+  NEW,
+  SAVE_AS,
+  IMPORT
 }
 
 export enum PodEditAction {

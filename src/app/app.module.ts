@@ -8,12 +8,14 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { PodFeatureContextMenuComponent } from './tools/pod-feature-context-menu/pod-feature-context-menu.component';
 import { MatSliderModule } from '@angular/material/slider';
-import { ColorPickerComponent } from './tools/color-picker/color-picker.component';
+import { ColorPickerComponent } from './windows/color-picker/color-picker.component';
 import { NewPodWindowComponent } from './windows/new-pod-window/new-pod-window.component';
 import { PodPresetComponent } from './tools/pod-preset/pod-preset.component';
 import { PodAppToolsComponent } from './tools/pod-app-tools/pod-app-tools.component';
 import { PodDocumentControllerComponent } from './windows/pod-document-controller/pod-document-controller.component';
 import { PodDocumentComponent } from './tools/pod-document/pod-document.component';
+import { LayersWindowComponent } from './windows/layers-window/layers-window.component';
+import { LayersWindowLayersTabComponent } from './tools/layers-window-layers-tab/layers-window-layers-tab.component';
 
 @NgModule({
   declarations: [
@@ -25,7 +27,9 @@ import { PodDocumentComponent } from './tools/pod-document/pod-document.componen
     PodPresetComponent,
     PodAppToolsComponent,
     PodDocumentControllerComponent,
-    PodDocumentComponent
+    PodDocumentComponent,
+    LayersWindowComponent,
+    LayersWindowLayersTabComponent
   ],
   imports: [
     BrowserModule.withServerTransition({ appId: 'serverApp' }),
