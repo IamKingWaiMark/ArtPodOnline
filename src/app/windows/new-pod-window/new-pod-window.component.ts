@@ -195,7 +195,7 @@ export class NewPodWindowComponent implements OnInit {
   }
   onCloseClick(){
     this.action.emit({
-      newPodWindowAction: NewPodWindowAction.CREATE
+      newPodWindowAction: NewPodWindowAction.CLOSE
     });
   }
 

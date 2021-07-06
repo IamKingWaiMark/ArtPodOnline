@@ -1,0 +1,13 @@
+<div class="layers-window">
+    <div class="layers-window-tab-container">
+        <span [ngClass]="{'layers-window-tab': true, 'active-layers-window-tab': true}">Layers</span>
+        <span [ngClass]="{'layers-window-tab': true, 'active-layers-window-tab': false}">Channels</span>
+        <span [ngClass]="{'layers-window-tab': true, 'active-layers-window-tab': false}">Path</span>
+        <span [ngClass]="{'layers-window-tab': true, 'active-layers-window-tab': false}">Properties</span>
+        <span [ngClass]="{'layers-window-tab': true, 'active-layers-window-tab': false}"></span>
+
+    </div>
+    <div>
+        <layers-window-layers-tab></layers-window-layers-tab>
+    </div>
+</div>

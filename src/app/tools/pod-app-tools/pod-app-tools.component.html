@@ -11,6 +11,10 @@
             <div class="pod-tool-action-list-item" (click)="onFileActionItemClick('IMPORT')">
                 <p>Import</p>
             </div>
+            <div class="pod-tool-action-list-item" (click)="onFileActionItemClick('SAVE_AS')">
+                <p>Save As</p>
+                <p>{{getCtrlKeyText()}} + Shift + S</p>
+            </div>
         </div>
     </div>
     <div class="pod-tool-menu">

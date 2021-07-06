@@ -1,0 +1,53 @@
+.layers-window-layers-tab {
+    display: grid;
+    grid-template-rows: 1.8em 1.8em 1.8em 1fr 1.8em;
+    grid-template-columns: 1fr;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    height: 100%;
+}
+.layers-tab-toolbar {
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+.layers-tab-toolbar:nth-child(1) {
+    border-width: 1px;
+    border-style: solid;
+    border-color: transparent transparent var(--primary-color-dark) transparent;
+}
+.layers-tab-toolbar:nth-child(2) {
+    border-width: 1px;
+    border-style: solid;
+    border-color: transparent transparent var(--primary-color-dark) transparent;
+}
+.layers-tab-toolbar:nth-child(3) {
+    border-width: 1px;
+    border-style: solid;
+    border-color: transparent transparent var(--primary-color-dark) transparent;
+}
+
+
+.layers-tab-toolbar:nth-child(5) {
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--primary-color-dark) transparent transparent transparent;
+    padding: 0 1em;
+}
+
+.layers-tab-icon {
+    width: 16px;
+
+    cursor: pointer;
+    border: 1px solid var(--primary-color);
+    padding: 0.3em;
+}
+
+.layers-tab-icon:hover {
+    border: 1px solid var(--primary-color);
+    background-color: var(--primary-color-accent);
+}

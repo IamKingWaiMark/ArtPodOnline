@@ -1,8 +1,8 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Component, EventEmitter, Inject, Input, OnInit, Output, PLATFORM_ID } from '@angular/core';
-import { GlobalEvents, HotKey } from '../classes/global-events';
+import { GlobalEvents, HotKey } from '../../tools/classes/global-events';
 
-import { Swatch } from '../classes/swatch';
+import { Swatch } from '../../tools/classes/swatch';
 
 @Component({
   selector: 'color-picker',

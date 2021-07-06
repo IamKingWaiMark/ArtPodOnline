@@ -4,11 +4,19 @@
     >
 
         <div 
+            #canvasFrame
             class="pod-document-content-canvas-container"
             (mousemove)="CANVAS_CONTAINER_onMouseMove($event)"
-            (mouseout)="CANVAS_CONTAINER_onMouseOut($event)">
-            <div class="pod-document-canvas-frame">
-
+            (mouseout)="CANVAS_CONTAINER_onMouseOut($event)"
+            (mousedown)="CANVAS_CONTAINER_onMouseDown($event)"
+            (mouseup)="CANVAS_CONTAINER_onMouseUp($event)">
+            <div id="pod-document-canvas-frame"
+            (mousemove)="CANVAS_FRAME_onMouseMove($event)"
+            >
+                <canvas class="test-canvas" 
+                    width="1000"
+                    height="1000"
+                ></canvas>
             </div>
         </div>
 
