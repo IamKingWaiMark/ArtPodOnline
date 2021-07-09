@@ -5,6 +5,7 @@ export class GlobalEvents {
     public readonly GLOBAL_MOUSE_UP_EVENT = new EventEmitter<MouseEvent>();
     public readonly GLOBAL_MOUSE_DOWN_EVENT = new EventEmitter<MouseEvent>();
     public readonly GLOBAL_KEYDOWN_EVENT = new EventEmitter<KeyboardEvent>();
+    public readonly GLOBAL_KEYUP_EVENT = new EventEmitter<KeyboardEvent>();
     public readonly GLOBAL_HOT_KEY_EVENT = new EventEmitter<HotKey>();
     
 }
@@ -12,6 +13,6 @@ export class GlobalEvents {
 export enum HotKey {
     SWAP_SWATCH,
     NEW_POD,
-    MOVE_POD_CANVAS,
-    EXPORT_AS
+    MOVE_POD_DCOUMENT,
+    SAVE_AS
 }

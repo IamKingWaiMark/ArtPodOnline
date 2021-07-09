@@ -4,18 +4,16 @@
     >
 
         <div 
-            #canvasFrame
             class="pod-document-content-canvas-container"
             (mousemove)="CANVAS_CONTAINER_onMouseMove($event)"
             (mouseout)="CANVAS_CONTAINER_onMouseOut($event)"
             (mousedown)="CANVAS_CONTAINER_onMouseDown($event)"
             (mouseup)="CANVAS_CONTAINER_onMouseUp($event)">
             <div id="pod-document-canvas-frame"
-            (mousemove)="CANVAS_FRAME_onMouseMove($event)"
-            >
-                <canvas class="test-canvas" 
-                    width="1000"
-                    height="1000"
+                (mousemove)="CANVAS_FRAME_onMouseMove($event)">
+                <canvas class="test-canvas" style="height: 100%; width: 100%;"
+                    [width]="activePodDocument?.getWidth()"
+                    [height]="activePodDocument?.getHeight()"
                 ></canvas>
             </div>
         </div>
@@ -30,7 +28,7 @@
 
     </div>
     <div class="pod-document-content-footer">
-        
+        <input class="pod-document-zoom-indicator-input" [value]="activePodDocument?.getZoomPercent()" maxlength="8"/>
     </div>
 </div>
 

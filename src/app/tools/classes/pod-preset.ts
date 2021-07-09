@@ -34,6 +34,10 @@ export class PodPreset {
         }
     }
 
+    getDimensions(){
+        return {width: this.w * this.ppi, height: this.h * this.ppi}
+    }
+
 }
 
 export enum PresetSize {

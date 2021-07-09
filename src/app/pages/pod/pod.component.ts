@@ -24,14 +24,14 @@ export class PodComponent implements OnInit {
   selectedPodFeatureSubscription = new BehaviorSubject<PodFeatures>(this.DEFAULTS.POD_FEATURES);
   showNewPodWindow = true;
 
-  podDocuments: PodDocument [] = [];
+  podDocuments: PodDocument[] = [];
   podDocumentsSubscription = new BehaviorSubject<PodDocument[]>(this.podDocuments);
 
   constructor(@Inject(PLATFORM_ID) private platform: Object) { }
 
   ngOnInit(): void {
 
-    if(isPlatformBrowser(this.platform)) {
+    if (isPlatformBrowser(this.platform)) {
       this.addWindowKeyEvents();
     }
   }
@@ -46,38 +46,41 @@ export class PodComponent implements OnInit {
     window.addEventListener("mousemove", (ev: MouseEvent) => {
       this.GLOBAL_EVENTS.GLOBAL_MOUSE_MOVE_EVENT.emit(ev);
     });
-    window.addEventListener("mouseup", (ev) => {
+    window.addEventListener("mouseup", (ev: MouseEvent) => {
       this.GLOBAL_EVENTS.GLOBAL_MOUSE_UP_EVENT.emit(ev);
     });
+    window.addEventListener("keyup", (ev: KeyboardEvent) => {
+      this.GLOBAL_EVENTS.GLOBAL_KEYUP_EVENT.emit(ev);
+    });
     window.addEventListener("keydown", (ev: KeyboardEvent) => {
-      
-      
+
+
       let CTRL_KEY = (navigator.platform.match("Mac") ? ev.metaKey : ev.ctrlKey);
-      if(CTRL_KEY && ev.shiftKey && ev.altKey) {
+      if (CTRL_KEY && ev.shiftKey && ev.altKey) {
         ev.preventDefault();
         ev.stopPropagation();
-      } else if(CTRL_KEY && ev.shiftKey) {
+      } else if (CTRL_KEY && ev.shiftKey) {
         ev.preventDefault();
         ev.stopPropagation();
-        switch(ev.key.toLowerCase()) {
-          case "s": break;
+        switch (ev.key.toLowerCase()) {
+          case "s": this.GLOBAL_EVENTS.GLOBAL_HOT_KEY_EVENT.emit(HotKey.SAVE_AS); break;
         }
       } else if (CTRL_KEY && ev.altKey) {
         ev.preventDefault();
         ev.stopPropagation();
-        switch(ev.key.toLowerCase()) {
+        switch (ev.key.toLowerCase()) {
           case "n": this.showNewPodWindow = true; break;
         }
-      } else if (CTRL_KEY) { 
+      } else if (CTRL_KEY) {
         ev.preventDefault();
         ev.stopPropagation();
-      } else if (ev.shiftKey) { 
+      } else if (ev.shiftKey) {
         ev.preventDefault();
         ev.stopPropagation();
       } else {
-        switch(ev.key.toLowerCase()) {
+        switch (ev.key.toLowerCase()) {
           case "x": this.GLOBAL_EVENTS.GLOBAL_HOT_KEY_EVENT.emit(HotKey.SWAP_SWATCH); break;
-          case " ": this.GLOBAL_EVENTS.GLOBAL_HOT_KEY_EVENT.emit(HotKey.MOVE_POD_CANVAS); break;
+          case " ": this.GLOBAL_EVENTS.GLOBAL_HOT_KEY_EVENT.emit(HotKey.MOVE_POD_DCOUMENT); break;
         }
       }
       this.GLOBAL_EVENTS.GLOBAL_KEYDOWN_EVENT.emit(ev);
@@ -91,6 +94,7 @@ export class PodComponent implements OnInit {
       case "MOVE": this.selectedPodFeatureSubscription.next(PodFeatures.MOVE); break;
       case "BRUSH": this.selectedPodFeatureSubscription.next(PodFeatures.BRUSH); break;
       case "ERASER": this.selectedPodFeatureSubscription.next(PodFeatures.ERASER); break;
+      case "ZOOM": this.selectedPodFeatureSubscription.next(PodFeatures.ZOOM); break;
     }
     this.FEATURE_INFO.setShouldShowContextMenu(false);
   }
@@ -100,18 +104,18 @@ export class PodComponent implements OnInit {
     NEW POD WINDOW
   */
   onNewPodWindowAction(action: NewPodWindowActionData) {
-    switch(action.newPodWindowAction) {
+    switch (action.newPodWindowAction) {
       case NewPodWindowAction.CREATE: this.showNewPodWindow = false; this.createNewDocument(action); break;
       case NewPodWindowAction.CLOSE: this.showNewPodWindow = false; break;
     }
   }
 
-  createNewDocument(action: NewPodWindowActionData){
+  createNewDocument(action: NewPodWindowActionData) {
     this.podDocuments.push(action.podDocument);
     this.podDocumentsSubscription.next(this.podDocuments);
   }
 
-  shouldShowNewPodWindow(){
+  shouldShowNewPodWindow() {
     return this.showNewPodWindow || (this.podDocuments && this.podDocuments.length <= 0);
   }
   /*
@@ -122,9 +126,12 @@ export class PodComponent implements OnInit {
     POD TOOL
   */
   onFileActionReceived(fileAction: PodFileAction) {
-    switch(fileAction) {
+    switch (fileAction) {
       case PodFileAction.NEW:
         this.showNewPodWindow = true;
+        break;
+      case PodFileAction.SAVE_AS:
+        this.GLOBAL_EVENTS.GLOBAL_HOT_KEY_EVENT.emit(HotKey.SAVE_AS);
         break;
     }
   }
@@ -138,7 +145,8 @@ export class PodComponent implements OnInit {
 export enum PodFeatures {
   MOVE = "MOVE",
   BRUSH = "BRUSH",
-  ERASER = "#00000000"
+  ERASER = "#00000000",
+  ZOOM = "ZOOM"
 }
 export class FeatureInfo {
   private eraserSize = 50;
@@ -147,13 +155,13 @@ export class FeatureInfo {
   private shouldShowContextMenu = false;
   // BRUSH
   private brushSize = 50;
-  private brushColor: {r: number, g: number, b: number} = {r: 0, g: 0, b: 0};
+  private brushColor: { r: number, g: number, b: number } = { r: 0, g: 0, b: 0 };
 
 
-  public getBrushColor(){
-    return this.brushColor? this.brushColor: {r: 255, g: 255, b: 255};
+  public getBrushColor() {
+    return this.brushColor ? this.brushColor : { r: 255, g: 255, b: 255 };
   }
-  public setBrushColor(swatch: Swatch){
+  public setBrushColor(swatch: Swatch) {
     this.brushColor = swatch.color;
   }
   public getEraserSize() {
@@ -193,5 +201,13 @@ export class FeatureInfo {
 
   public setShouldShowContextMenu(show: boolean) {
     this.shouldShowContextMenu = show;
+  }
+
+  /**Returns the current feature size */
+  public getUtensilSize(selectedPodFeature: PodFeatures) {
+    switch (selectedPodFeature) {
+      case PodFeatures.BRUSH: return this.getBrushSize();
+      case PodFeatures.ERASER: return this.getEraserSize();
+    }
   }
 }
