@@ -305,11 +305,10 @@ export class PodDocumentActions {
       let canvasContainerDimensions = canvasContainer.getBoundingClientRect();
       let containerWidth = canvasContainerDimensions.width;
       let containerHeight = canvasContainerDimensions.height;
-      scale = containerWidth / frameWidth;
+      scale = frameWidth > frameHeight? containerWidth / frameWidth: containerHeight / frameHeight;
       if(scale > 1) scale = 1;
       frameWidth = frameWidth * scale;
       frameHeight = frameHeight * scale;
-
     }
     canvasFrame.style.width = `${frameWidth}px`
     canvasFrame.style.height = `${frameHeight}px`
