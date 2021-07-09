@@ -36,7 +36,6 @@
     background-color: white;
 }
 
-
 #pod-document-cursor {
     pointer-events: none;
     mix-blend-mode: difference;
@@ -50,4 +49,22 @@
     border-color: var(--primary-color-dark) transparent transparent transparent;
     border-width: 1px;
     border-style: solid;
+}
+
+.pod-document-zoom-indicator-input {
+    height: 100%;
+    background-color: var(--primary-color-accent);
+    border: none;
+    outline: none;
+    width: 6em;
+    padding: 0 .5em;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: .65em;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
 }

@@ -3,7 +3,8 @@ import { Routes, RouterModule } from '@angular/router';
 import { PodComponent } from './pages/pod/pod.component';
 
 const routes: Routes = [
-  {path: "", component: PodComponent}
+  {path: "", component: PodComponent},
+  {path: "**", component: PodComponent}
 ];
 
 @NgModule({
