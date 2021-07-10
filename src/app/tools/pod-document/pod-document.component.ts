@@ -299,7 +299,7 @@ export class PodDocumentActions {
     let canvasContainer = this.getCanvasContainer();
     let canvasFrame = this.getCanvasFrame();
     let frameWidth = podDocument.getWidth();
-    let frameHeight = podDocument.getHeight()
+    let frameHeight = podDocument.getHeight();
     let scale = 1;
     if (canvasContainer) {
       let canvasContainerDimensions = canvasContainer.getBoundingClientRect();
@@ -309,12 +309,15 @@ export class PodDocumentActions {
       if(scale > 1) scale = 1;
       frameWidth = frameWidth * scale;
       frameHeight = frameHeight * scale;
+
     }
+    
+
+    
     canvasFrame.style.width = `${frameWidth}px`
     canvasFrame.style.height = `${frameHeight}px`
     this.podDocComp.activePodDocument.setZoomScale(scale);
     this.centerCanvasFrame();
-
   }
 
   centerCanvasFrame(){
@@ -327,6 +330,7 @@ export class PodDocumentActions {
     canvasFrame.style.top = `${containerCenter.y - canvasFrameHalves.y}px`
     canvasFrame.style.left = `${containerCenter.x - canvasFrameHalves.x}px`
   }
+
   getCanvasContainer(){
     return <HTMLDivElement>document.querySelector(".pod-document-content-canvas-container");
   }
@@ -373,7 +377,7 @@ export class ZoomActions {
     
     this.podDocComp.activePodDocument.setZoomScale(scale);
     this.podDocComp.DOCUMENT_ACTIONS.scaleDocumentCanvasFrame();
-    if(scale < 1) this.podDocComp.DOCUMENT_ACTIONS.centerCanvasFrame();
+    this.podDocComp.DOCUMENT_ACTIONS.centerCanvasFrame();
     this.setLastMousePosition(currentMousePos);
   }
 
