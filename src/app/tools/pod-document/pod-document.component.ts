@@ -300,29 +300,37 @@ export class PodDocumentActions {
     let canvasFrame = this.getCanvasFrame();
     let frameWidth = podDocument.getWidth();
     let frameHeight = podDocument.getHeight();
-    let canvasFrameTop = 0;
-    let canvasFrameLeft = 0;
     let scale = 1;
     if (canvasContainer) {
       let canvasContainerDimensions = canvasContainer.getBoundingClientRect();
       let containerWidth = canvasContainerDimensions.width;
       let containerHeight = canvasContainerDimensions.height;
-      scale = containerWidth / frameWidth;
+      scale = frameWidth > frameHeight? containerWidth / frameWidth: containerHeight / frameHeight;
       if(scale > 1) scale = 1;
       frameWidth = frameWidth * scale;
       frameHeight = frameHeight * scale;
-      let docPosition = {x: ((containerWidth - frameWidth) / 2), y: 100};
-      canvasFrameTop = docPosition.y;
-      canvasFrameLeft = docPosition.x;
 
     }
-    this.podDocComp.activePodDocument.setZoomScale(scale);
+    
 
-    canvasFrame.style.top = `${canvasFrameTop}px`
-    canvasFrame.style.left = `${canvasFrameLeft}px`
+    
     canvasFrame.style.width = `${frameWidth}px`
     canvasFrame.style.height = `${frameHeight}px`
+    this.podDocComp.activePodDocument.setZoomScale(scale);
+    this.centerCanvasFrame();
   }
+
+  centerCanvasFrame(){
+    let canvasFrame = this.getCanvasFrame();
+    let canvasContainer = this.getCanvasContainer();
+    let canvasContainerDimensions = canvasContainer.getBoundingClientRect();
+    let containerCenter = {x: canvasContainerDimensions.width / 2, y: canvasContainerDimensions.height / 2};
+    let canvasFrameDimensions = canvasFrame.getBoundingClientRect();
+    let canvasFrameHalves = {x: canvasFrameDimensions.width / 2, y: canvasFrameDimensions.height / 2};
+    canvasFrame.style.top = `${containerCenter.y - canvasFrameHalves.y}px`
+    canvasFrame.style.left = `${containerCenter.x - canvasFrameHalves.x}px`
+  }
+
   getCanvasContainer(){
     return <HTMLDivElement>document.querySelector(".pod-document-content-canvas-container");
   }
@@ -369,6 +377,7 @@ export class ZoomActions {
     
     this.podDocComp.activePodDocument.setZoomScale(scale);
     this.podDocComp.DOCUMENT_ACTIONS.scaleDocumentCanvasFrame();
+    this.podDocComp.DOCUMENT_ACTIONS.centerCanvasFrame();
     this.setLastMousePosition(currentMousePos);
   }
 
