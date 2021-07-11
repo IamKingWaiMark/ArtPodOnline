@@ -1,5 +1,5 @@
 import { isPlatformBrowser } from '@angular/common';
-import { Component, Inject, Input, OnInit, PLATFORM_ID } from '@angular/core';
+import { Component, Inject, Input, OnInit, Output, PLATFORM_ID } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { FeatureInfo, PodFeatures } from 'src/app/pages/pod/pod.component';
 import { GlobalEvents, HotKey } from '../classes/global-events';
@@ -26,6 +26,7 @@ export class PodDocumentComponent implements OnInit {
   @Input() selectedPodFeatureSubscription: BehaviorSubject<PodFeatures>;
   @Input() FEATURE_INFO: FeatureInfo;
   @Input() GLOBAL_EVENTS: GlobalEvents;
+
 
   CURSOR_ACTIONS: CursorActions = null; 
   DOCUMENT_ACTIONS: PodDocumentActions = null;
@@ -75,8 +76,6 @@ export class PodDocumentComponent implements OnInit {
     );
   }
 
-
-
   subscribeToPodFeatures() {
     this.selectedPodFeatureSubscription.subscribe(
       (feature: PodFeatures) => {
@@ -101,7 +100,7 @@ export class PodDocumentComponent implements OnInit {
     );
     this.GLOBAL_EVENTS.GLOBAL_KEYUP_EVENT.subscribe(
       (ev: KeyboardEvent) => {
-        this.setState(null);
+        this.setState(null); 
       }
     );
     this.GLOBAL_EVENTS.GLOBAL_MOUSE_UP_EVENT.subscribe(
@@ -116,10 +115,6 @@ export class PodDocumentComponent implements OnInit {
     );
   }
   
-
-
-
-
   CANVAS_CONTAINER_onMouseDown(ev: MouseEvent) {
     this.DOCUMENT_ACTIONS.lastMousePositionOnCanvasFrame = this.calculateMousePositionOn(this.DOCUMENT_ACTIONS.getCanvasFrame(), {x: ev.x, y: ev.y});
     if(this.state == PodDocumentState.MOVE) {
@@ -165,21 +160,7 @@ export class PodDocumentComponent implements OnInit {
   CANVAS_FRAME_onMouseMove(ev: MouseEvent) {
     
    if (this.state != PodDocumentState.EDIT) return;
-    let canvas = <HTMLCanvasElement>document.querySelector(".test-canvas");
-    let currentMousePos = this.calculateMousePositionOn(canvas, { x: ev.x, y: ev.y });
 
-    let utensil = canvas.getContext("2d");
-    utensil.beginPath();
-    //console.log("Utensil Size" + (this.FEATURE_INFO.getUtensilSize(this.selectedPodFeature) * this.activePodDocument.metaData.zoomScale));
-    utensil.lineWidth = this.FEATURE_INFO.getUtensilSize(this.selectedPodFeature);
-    utensil.strokeStyle = '#ff0000';
-    utensil.lineCap = "round";
-    utensil.moveTo(this.DOCUMENT_ACTIONS.lastMousePositionOnCanvasFrame.x, this.DOCUMENT_ACTIONS.lastMousePositionOnCanvasFrame.y);
-    utensil.lineTo(currentMousePos.x, currentMousePos.y);
-    utensil.stroke();
-    utensil.closePath();
-
-    this.DOCUMENT_ACTIONS.lastMousePositionOnCanvasFrame = currentMousePos;
 
   }
 
@@ -191,7 +172,7 @@ export class PodDocumentComponent implements OnInit {
   /**Calculates the mouse position relative to the DOM element*/
   calculateMousePositionOn(element: HTMLElement, mousePos: XY) {
     let elementDimensions = element.getBoundingClientRect();
-    let scale = this.activePodDocument.metaData.zoomScale;
+    let scale = this.activePodDocument.getZoomScale();
     return { 
       x: ((mousePos.x - elementDimensions.x) / scale) , 
       y: ((mousePos.y - elementDimensions.y) / scale) };
@@ -365,12 +346,10 @@ export class PodDocumentActions {
       frameHeight = frameHeight * scale;
 
     }
-    
-
-    
     canvasFrame.style.width = `${frameWidth}px`
     canvasFrame.style.height = `${frameHeight}px`
     this.podDocComp.activePodDocument.setZoomScale(scale);
+    this.podDocComp.activePodDocument.addLayer(0);
     this.centerCanvasFrame();
   }
 
@@ -475,3 +454,5 @@ export class ZoomActions {
     this.lastMousePosition = lastMousePosition;
   }
 }
+
+
