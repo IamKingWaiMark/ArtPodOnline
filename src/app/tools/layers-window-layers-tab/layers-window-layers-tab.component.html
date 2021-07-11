@@ -5,11 +5,24 @@
 
     <div class="layers-tab-toolbar"></div>
 
-    <div></div>
+    <div class="layers-tab-layer-section">
+        <div class="layers-tab-layer-section-container">
+            <div 
+                [ngClass]="{'layer': true, 'active-layer': isActiveLayer(layer)}" 
+                *ngFor="let layer of activePodDocument?.getLayers(); index as i;">
+                <div class="layer-icon-container" (click)="layer?.toggleVisibility()">
+                    <img [src]="layer?.getVisibilityIconSrc()" width="16" height="16">
+                </div>
+                <div (click)="onLayerClick(i)">
+                    <input [value]="layer.name"/>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="layers-tab-toolbar">
         <img class="layers-tab-icon" src="assets/icons/feature_group_layers.png">
-        <img class="layers-tab-icon" src="assets/icons/feature_add_layer.png">
+        <img class="layers-tab-icon" (click)="onAddLayerClick()" src="assets/icons/feature_add_layer.png">
         <img class="layers-tab-icon" src="assets/icons/feature_delete_layer.png">
     </div>
 </div>

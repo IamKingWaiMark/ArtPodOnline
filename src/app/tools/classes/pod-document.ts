@@ -1,8 +1,8 @@
 import { PodPreset } from "./pod-preset";
 
 export class PodDocument {
-    metaData: PodDocMetaData;
-    layers: number [] = [1];
+    private metaData: PodDocMetaData;
+    private layers: Layer [] = [];
 
 
     constructor(metaData: PodDocMetaData) {
@@ -11,6 +11,9 @@ export class PodDocument {
         this.metaData.position = {x: 0, y: 0};
     }
 
+    addLayer(index: number){
+        this.layers.splice(index, 0, new Layer(`Layer ${this.layers.length + 1}`));
+    }
 
     getZoomPercent(){
         return (this.metaData.zoomScale * 100).toFixed(2) + "%";
@@ -40,6 +43,12 @@ export class PodDocument {
         return this.metaData.podPreset.h * this.metaData.podPreset.ppi;
     }
 
+    getLayers(){
+        return this.layers;
+    }
+
+
+
 
 }
 
@@ -48,4 +57,29 @@ export interface PodDocMetaData {
     podPreset: PodPreset,
     zoomScale: number;
     position: {x: number, y: number}
+}
+
+
+export class Layer {
+    images: HTMLImageElement [] = [];
+    name: string;
+    visible = true;
+    constructor(name: string){
+        this.name = name;
+    }
+    addImage(dataUrl: string){
+        let imageElement = new Image();
+        imageElement.src = dataUrl;
+        this.images.push(imageElement);
+    }
+
+    getVisibilityIconSrc(){
+        return this.visible? "assets/icons/visibility_on_icon.png": "assets/icons/visibility_off_icon.png";
+    }
+
+    toggleVisibility(){
+        this.visible = this.visible? false: true;
+    }
+
+
 }
