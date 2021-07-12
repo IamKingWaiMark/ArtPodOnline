@@ -27,6 +27,8 @@ export class PodComponent implements OnInit {
   podDocuments: PodDocument[] = [];
   podDocumentsSubscription = new BehaviorSubject<PodDocument[]>(this.podDocuments);
 
+
+
   constructor(@Inject(PLATFORM_ID) private platform: Object) { }
 
   ngOnInit(): void {
@@ -98,6 +100,7 @@ export class PodComponent implements OnInit {
     }
     this.FEATURE_INFO.setShouldShowContextMenu(false);
   }
+  
 
 
   /*

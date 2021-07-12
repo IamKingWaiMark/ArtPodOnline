@@ -3,7 +3,7 @@ import { Component, Inject, Input, OnInit, PLATFORM_ID } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { FeatureInfo, PodFeatures } from 'src/app/pages/pod/pod.component';
 import { GlobalEvents } from 'src/app/tools/classes/global-events';
-import { PodDocument } from 'src/app/tools/classes/pod-document';
+import { Layer, PodDocument } from 'src/app/tools/classes/pod-document';
 
 @Component({
   selector: 'app-pod-document-controller',
@@ -19,6 +19,7 @@ export class PodDocumentControllerComponent implements OnInit {
   podDocuments: PodDocument [];
   activeTabIndex = 0;
   activePodDocumentSubscription = new BehaviorSubject<PodDocument>(null);
+  activeLayerSubscription = new BehaviorSubject<Layer>(null);
 
   constructor(@Inject(PLATFORM_ID) private platform: Object ) { }
 

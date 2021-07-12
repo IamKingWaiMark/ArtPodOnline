@@ -1,8 +1,11 @@
+
 import { PodPreset } from "./pod-preset";
+import { Vector2D } from "./vectors";
 
 export class PodDocument {
     private metaData: PodDocMetaData;
     private layers: Layer [] = [];
+    private layerCounter = 1;
 
 
     constructor(metaData: PodDocMetaData) {
@@ -12,7 +15,18 @@ export class PodDocument {
     }
 
     addLayer(index: number){
-        this.layers.splice(index, 0, new Layer(`Layer ${this.layers.length + 1}`));
+        let layer = new Layer(`Layer ${this.layerCounter++}`);
+        this.layers.splice(index, 0, layer);
+        return layer;
+    }
+
+    deleteLayer(index: number){
+        if(this.layers.length > 1)
+            this.layers.splice(index, 1);
+    }
+
+    addBackgroundLayer(){
+        
     }
 
     getZoomPercent(){
@@ -61,16 +75,22 @@ export interface PodDocMetaData {
 
 
 export class Layer {
-    images: HTMLImageElement [] = [];
+    images: {src: HTMLImageElement, imageDimensions: ImageDimenions} [] = [];
     name: string;
     visible = true;
+    drawPoints: {mousePos: Vector2D, fill: {r: number, g: number, b: number}}[] = []
+
+
     constructor(name: string){
         this.name = name;
     }
-    addImage(dataUrl: string){
+    addImage(dataUrl: string, imageDimensions: ImageDimenions){
         let imageElement = new Image();
         imageElement.src = dataUrl;
-        this.images.push(imageElement);
+        this.images.push({
+            src: imageElement,
+            imageDimensions: imageDimensions
+        });
     }
 
     getVisibilityIconSrc(){
@@ -81,5 +101,11 @@ export class Layer {
         this.visible = this.visible? false: true;
     }
 
+}
 
+export interface ImageDimenions {
+    xAxis: {x1: number, x2: number},
+    yAxis: {y1: number, y2: number}
+    w: number,
+    h: number
 }

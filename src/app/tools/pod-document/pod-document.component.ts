@@ -3,9 +3,9 @@ import { Component, Inject, Input, OnInit, Output, PLATFORM_ID } from '@angular/
 import { BehaviorSubject } from 'rxjs';
 import { FeatureInfo, PodFeatures } from 'src/app/pages/pod/pod.component';
 import { GlobalEvents, HotKey } from '../classes/global-events';
-import { XY } from '../classes/math';
 import { MouseUtilities } from '../classes/mouse-events-utlility-functions';
-import { PodDocument } from '../classes/pod-document';
+import { ImageDimenions, Layer, PodDocument } from '../classes/pod-document';
+import { Vector2D } from '../classes/vectors';
 /**             Canvas Container
  * ------------------------------------------------------
  * |            Canvas Frame                            |
@@ -26,12 +26,15 @@ export class PodDocumentComponent implements OnInit {
   @Input() selectedPodFeatureSubscription: BehaviorSubject<PodFeatures>;
   @Input() FEATURE_INFO: FeatureInfo;
   @Input() GLOBAL_EVENTS: GlobalEvents;
+  @Input() activeLayerSubscription: BehaviorSubject<Layer>;
 
 
   CURSOR_ACTIONS: CursorActions = null; 
   DOCUMENT_ACTIONS: PodDocumentActions = null;
   SAVE_ACTIONS: PodDocumentSaveActions = null;
   ZOOM_ACTIONS: ZoomActions = null;
+  RENDER_ACTIONS: RenderActions = null;
+
 
   mouseUtilities = new MouseUtilities();
 
@@ -41,29 +44,43 @@ export class PodDocumentComponent implements OnInit {
 
   selectedPodFeature: PodFeatures = null;
   activePodDocument: PodDocument = null;
+ 
 
 
   constructor(@Inject(PLATFORM_ID) private platform: Object) { }
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platform)) {
-      this.subscribeToActivePodDocument();
+      this.CURSOR_ACTIONS = new CursorActions(this);
+      this.DOCUMENT_ACTIONS = new PodDocumentActions(this);
+      this.SAVE_ACTIONS = new PodDocumentSaveActions();
+      this.ZOOM_ACTIONS = new ZoomActions(this); 
+      this.RENDER_ACTIONS = new RenderActions(this);
+      this.subscribeToActiveLayer();
       this.subscribeToDocumentStates();
       this.subscribeToPodFeatures();
       this.subscribeToGlobalEvents();
+      this.subscribeToActivePodDocument();
+      
     }
+  }
+
+  subscribeToActiveLayer(){
+    this.activeLayerSubscription.subscribe(
+      layer => {
+        this.RENDER_ACTIONS.activeLayer = layer;
+        this.RENDER_ACTIONS.render();
+      }
+    );
   }
 
   subscribeToActivePodDocument() {
     this.activePodDocumentSubscription.subscribe(
       podDocument => {
         this.activePodDocument = podDocument;
-        this.CURSOR_ACTIONS = new CursorActions(this);
-        this.DOCUMENT_ACTIONS = new PodDocumentActions(this);
-        this.SAVE_ACTIONS = new PodDocumentSaveActions();
-        this.ZOOM_ACTIONS = new ZoomActions(this); 
         if (!podDocument) return;
         this.DOCUMENT_ACTIONS.setupDocument(podDocument);
+        
       }
     );
   }
@@ -105,7 +122,8 @@ export class PodDocumentComponent implements OnInit {
     );
     this.GLOBAL_EVENTS.GLOBAL_MOUSE_UP_EVENT.subscribe(
       (ev: MouseEvent) => {
-        
+        this.setState(null);
+        //this.RENDER_ACTIONS.saveImageToActiveLayer();
       }
     );
     this.GLOBAL_EVENTS.GLOBAL_MOUSE_DOWN_EVENT.subscribe(
@@ -116,13 +134,16 @@ export class PodDocumentComponent implements OnInit {
   }
   
   CANVAS_CONTAINER_onMouseDown(ev: MouseEvent) {
-    this.DOCUMENT_ACTIONS.lastMousePositionOnCanvasFrame = this.calculateMousePositionOn(this.DOCUMENT_ACTIONS.getCanvasFrame(), {x: ev.x, y: ev.y});
+    this.RENDER_ACTIONS.setDrawPoint({x: ev.x, y: ev.y});
     if(this.state == PodDocumentState.MOVE) {
 
     } else {
       switch(this.selectedPodFeature) {
         case PodFeatures.ZOOM: this.state = PodDocumentState.ZOOM; this.ZOOM_ACTIONS.setLastMousePosition({x: ev.x, y: ev.y}); break;
-        case PodFeatures.BRUSH: this.state = PodDocumentState.EDIT; break;
+        case PodFeatures.BRUSH: 
+          this.state = PodDocumentState.EDIT; 
+          this.RENDER_ACTIONS.drawOnDrawCanvas({x: ev.x, y: ev.y}); 
+          break;
         case PodFeatures.ERASER: this.state = PodDocumentState.EDIT; break;
       }
     }
@@ -158,19 +179,12 @@ export class PodDocumentComponent implements OnInit {
 
   
   CANVAS_FRAME_onMouseMove(ev: MouseEvent) {
-    
    if (this.state != PodDocumentState.EDIT) return;
-
-
+   this.RENDER_ACTIONS.drawOnDrawCanvas({x: ev.x, y: ev.y});
   }
 
-
-
-
-
-
   /**Calculates the mouse position relative to the DOM element*/
-  calculateMousePositionOn(element: HTMLElement, mousePos: XY) {
+  calculateMousePositionOn(element: HTMLElement, mousePos: Vector2D) {
     let elementDimensions = element.getBoundingClientRect();
     let scale = this.activePodDocument.getZoomScale();
     return { 
@@ -199,6 +213,193 @@ export enum PodDocumentState {
   ZOOM = "ZOOM"
 }
 
+
+export class RenderActions {
+
+  podDocComp: PodDocumentComponent;
+  activeLayer: Layer = null;
+  drawPoint: Vector2D;
+  imageDimensions: ImageDimenions = {xAxis: null, yAxis: null, w: 0, h: 0};
+  constructor(podDocComp: PodDocumentComponent){
+    this.podDocComp = podDocComp;
+  }
+
+  drawOnDrawCanvas(mousePos: Vector2D){
+    let drawCanvas = this.getDrawCanvas();
+    let currentMousePos = this.podDocComp.calculateMousePositionOn(drawCanvas, mousePos);
+    let utensil = drawCanvas.getContext("2d");
+    let distanceX = Math.abs(currentMousePos.x - this.drawPoint.x); 
+    let distanceY = Math.abs(currentMousePos.y - this.drawPoint.y);
+    let utensilSize = this.podDocComp.FEATURE_INFO.getUtensilSize(this.podDocComp.selectedPodFeature);
+    if((distanceX > utensilSize / 5) || (distanceY > utensilSize / 5) || distanceX == 0 || distanceY == 0) {
+      utensil.beginPath();
+      utensil.lineWidth = utensilSize;
+      utensil.strokeStyle = `rgb(${this.podDocComp.FEATURE_INFO.getBrushColor().r}, ${this.podDocComp.FEATURE_INFO.getBrushColor().g}, ${this.podDocComp.FEATURE_INFO.getBrushColor().b})`;
+      utensil.lineCap = "round";
+      utensil.moveTo(this.drawPoint.x, this.drawPoint.y);
+      utensil.lineTo(currentMousePos.x, currentMousePos.y);
+      utensil.stroke();
+      this.drawPoint = currentMousePos;
+      this.activeLayer.drawPoints.push(
+        {
+          mousePos: this.drawPoint, 
+          fill: {r: this.podDocComp.FEATURE_INFO.getBrushColor().r, g: this.podDocComp.FEATURE_INFO.getBrushColor().g, b: this.podDocComp.FEATURE_INFO.getBrushColor().b}
+        }
+      );
+    }
+   
+    /*let drawCanvas = this.getDrawCanvas();
+    let currentMousePos = this.podDocComp.calculateMousePositionOn(drawCanvas, mousePos);
+    this.calculateImageDimensions();
+    let utensil = drawCanvas.getContext("2d");
+    utensil.beginPath();
+    utensil.lineWidth = this.podDocComp.FEATURE_INFO.getUtensilSize(this.podDocComp.selectedPodFeature);
+    utensil.strokeStyle = `rgb(${this.podDocComp.FEATURE_INFO.getBrushColor().r}, ${this.podDocComp.FEATURE_INFO.getBrushColor().g}, ${this.podDocComp.FEATURE_INFO.getBrushColor().b})`;
+    utensil.lineCap = "round";
+    utensil.moveTo(this.drawPoint.x, this.drawPoint.y);
+    utensil.lineTo(currentMousePos.x, currentMousePos.y);
+    utensil.stroke();
+    this.drawPoint = currentMousePos;*/
+  }
+
+  calculateImageDimensions() {
+    let utensilSize = this.podDocComp.FEATURE_INFO.getUtensilSize(this.podDocComp.selectedPodFeature);
+    let xAxis_x1 = this.drawPoint.x - (utensilSize/2);
+    let xAxis_x2 = this.drawPoint.x + (utensilSize/2);
+    let yAxis_y1 = this.drawPoint.y - (utensilSize/2);
+    let yAxis_y2 = this.drawPoint.y + (utensilSize/2);
+
+    if(this.imageDimensions.xAxis == null) {
+      this.imageDimensions.xAxis = {x1: 0, x2: 0};
+      this.imageDimensions.xAxis.x1 = this.imageDimensions.xAxis.x2 = this.drawPoint.x;
+    } 
+
+    if(this.imageDimensions.yAxis == null) {
+      this.imageDimensions.yAxis = {y1: 0, y2: 0};
+      this.imageDimensions.yAxis.y1 = this.imageDimensions.yAxis.y2 = this.drawPoint.y;
+    }
+    let newImageX1 = this.imageDimensions.xAxis.x1 > xAxis_x1? xAxis_x1: this.imageDimensions.xAxis.x1;
+    let newImageX2 = this.imageDimensions.xAxis.x2 < xAxis_x2? xAxis_x2: this.imageDimensions.xAxis.x2;
+    let newImageY1 = this.imageDimensions.yAxis.y1 > yAxis_y1? yAxis_y1: this.imageDimensions.yAxis.y1;
+    let newImageY2 = this.imageDimensions.yAxis.y2 < yAxis_y2? yAxis_y2: this.imageDimensions.yAxis.y2;
+    let w = Math.abs(newImageX2 - newImageX1);
+    let h = Math.abs(newImageY2 - newImageY1);
+    this.imageDimensions = {xAxis: {x1: newImageX1, x2: newImageX2}, yAxis: {y1: newImageY1, y2: newImageY2}, w, h};
+  }
+
+  saveImageToActiveLayer(){
+    if(this.activeLayer == null ||
+      this.imageDimensions.xAxis == null ||
+      this.imageDimensions.yAxis == null ||
+      this.imageDimensions.w <= 0 ||
+      this.imageDimensions.h <= 0) return;
+    var canvas = document.createElement('canvas');
+    canvas.width = this.imageDimensions.w;
+    canvas.height = this.imageDimensions.h;
+    canvas.getContext('2d').drawImage(
+      this.getDrawCanvas(),
+      this.imageDimensions.xAxis.x1,
+      this.imageDimensions.yAxis.y1,
+      this.imageDimensions.w,
+      this.imageDimensions.h,
+      0, 0, this.imageDimensions.w, this.imageDimensions.h);
+    let src = canvas.toDataURL()
+    this.activeLayer.addImage(src, this.imageDimensions);
+    this.imageDimensions = {xAxis: null, yAxis: null, w: 0, h: 0};
+  }
+
+  render(){
+    let topCanvas = this.getTopCanvas();
+    let drawCanvas = this.getDrawCanvas();
+    let bottomCanvas = this.getBottomCanvas();
+    this.clearCanvas(topCanvas);
+    this.clearCanvas(drawCanvas);
+    this.clearCanvas(bottomCanvas);
+    let bottomLayer = true;
+    if(!this.podDocComp.activePodDocument) return;
+    for(let i = this.podDocComp.activePodDocument.getLayers().length - 1; i >= 0; i--) {
+      let layer = this.podDocComp.activePodDocument.getLayers()[i];
+      if(layer == this.activeLayer) {
+        bottomLayer = false;
+      }
+      if(bottomLayer) {
+        this.drawLayersOn(bottomCanvas, layer);
+      } else if (layer == this.activeLayer) {
+        this.drawLayersOn(drawCanvas, layer);
+      } else {
+        this.drawLayersOn(topCanvas, layer);
+      }
+    }
+    /*let topCanvas = this.getTopCanvas();
+    let drawCanvas = this.getDrawCanvas();
+    let bottomCanvas = this.getBottomCanvas();
+    this.clearCanvas(topCanvas);
+    this.clearCanvas(drawCanvas);
+    this.clearCanvas(bottomCanvas);
+    let bottomLayer = true;
+    if(!this.podDocComp.activePodDocument) return;
+    for(let i = this.podDocComp.activePodDocument.getLayers().length - 1; i >= 0; i--) {
+      let layer = this.podDocComp.activePodDocument.getLayers()[i];
+      if(layer == this.activeLayer) {
+        bottomLayer = false;
+      }
+      if(bottomLayer) {
+        this.drawLayersOn(bottomCanvas, layer);
+      } else if (layer == this.activeLayer) {
+        this.drawLayersOn(drawCanvas, layer);
+      } else {
+        this.drawLayersOn(topCanvas, layer);
+      }
+    }*/
+  }
+
+  clearCanvas(canvas: HTMLCanvasElement) {
+    const utensil = canvas.getContext('2d');
+    utensil.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  drawLayersOn(canvas: HTMLCanvasElement, layer: Layer){
+    let utensil = canvas.getContext("2d"); 
+    let lastPoint = {x: 0, y: 0};
+    for(let i = 0; i < layer.drawPoints.length; i++) {
+      if(i > 0) lastPoint = layer.drawPoints[i - 1].mousePos;
+      else lastPoint = layer.drawPoints[i].mousePos;
+
+      utensil.beginPath();
+      utensil.lineWidth = this.podDocComp.FEATURE_INFO.getUtensilSize(this.podDocComp.selectedPodFeature);
+      utensil.strokeStyle = `rgb(${this.podDocComp.FEATURE_INFO.getBrushColor().r}, ${this.podDocComp.FEATURE_INFO.getBrushColor().g}, ${this.podDocComp.FEATURE_INFO.getBrushColor().b})`;
+      utensil.lineCap = "round";
+      utensil.moveTo(lastPoint.x, lastPoint.y);
+      utensil.lineTo(layer.drawPoints[i].mousePos.x, layer.drawPoints[i].mousePos.y);
+      utensil.stroke();
+      utensil.closePath();
+    }
+
+    /*
+    let utensil = canvas.getContext("2d"); 
+    for(let image of layer.images) {
+      utensil.drawImage(image.src, image.imageDimensions.xAxis.x1, image.imageDimensions.yAxis.y1);
+    }
+    */
+      
+  }
+
+  getDrawCanvas(){
+    return <HTMLCanvasElement>document.querySelector(".draw-canvas");
+  }
+  getBottomCanvas(){
+    return <HTMLCanvasElement>document.querySelector(".bottom-canvas");
+  }
+  getTopCanvas(){
+    return <HTMLCanvasElement>document.querySelector(".top-canvas");
+  }
+
+  setDrawPoint(mousePos: Vector2D) {
+    this.drawPoint = this.podDocComp.calculateMousePositionOn(
+      this.getDrawCanvas(), mousePos
+    );
+  }
+}
 
 export class CursorActions {
   podDocComp: PodDocumentComponent;
@@ -313,9 +514,9 @@ export class CursorActions {
 
 export class PodDocumentActions {
   podDocComp: PodDocumentComponent;
-  lastMousePositionOnCanvasFrame: XY;
-  mouseSnapshot: XY;
-  canvasFrameSnapshot: XY;
+  mouseSnapshot: Vector2D;
+  canvasFrameSnapshot: Vector2D;
+  
   constructor(podDocComp: PodDocumentComponent){
     this.podDocComp = podDocComp;
   }
@@ -349,7 +550,7 @@ export class PodDocumentActions {
     canvasFrame.style.width = `${frameWidth}px`
     canvasFrame.style.height = `${frameHeight}px`
     this.podDocComp.activePodDocument.setZoomScale(scale);
-    this.podDocComp.activePodDocument.addLayer(0);
+    this.podDocComp.activeLayerSubscription.next(this.podDocComp.activePodDocument.addLayer(0));
     this.centerCanvasFrame();
   }
 
@@ -364,7 +565,7 @@ export class PodDocumentActions {
     canvasFrame.style.left = `${containerCenter.x - canvasFrameHalves.x}px`
   }
 
-  moveCanvasFrame(mousePos: XY){
+  moveCanvasFrame(mousePos: Vector2D){
     let canvasFrame = this.getCanvasFrame();
     let canvasContainer = this.getCanvasContainer();
     let canvasContainerDimensions = canvasContainer.getBoundingClientRect();
@@ -407,7 +608,6 @@ export class PodDocumentActions {
     this.canvasFrameSnapshot = null;
   }
 
-
 }
 
 
@@ -423,7 +623,7 @@ export class PodDocumentSaveActions {
 
 export class ZoomActions {
   podDocComp: PodDocumentComponent;
-  lastMousePosition: XY;
+  lastMousePosition: Vector2D;
   constructor(podDocComp: PodDocumentComponent){
     this.podDocComp = podDocComp;
   }
@@ -450,9 +650,11 @@ export class ZoomActions {
     this.setLastMousePosition(currentMousePos);
   }
 
-  setLastMousePosition(lastMousePosition: XY){
+  setLastMousePosition(lastMousePosition: Vector2D){
     this.lastMousePosition = lastMousePosition;
   }
 }
+
+
 
 

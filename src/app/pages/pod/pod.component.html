@@ -32,7 +32,9 @@
 
     <div id="pod-right-pane">
         <color-picker [GLOBAL_EVENTS]="GLOBAL_EVENTS" (selectedColor)="FEATURE_INFO?.setBrushColor($event)"></color-picker>
-        <layers-window [activePodDocumentSubscription]="podDocumentController?.activePodDocumentSubscription"></layers-window>
+        <layers-window 
+        [activeLayerSubscription]="podDocumentController?.activeLayerSubscription"
+        [activePodDocumentSubscription]="podDocumentController?.activePodDocumentSubscription"></layers-window>
     </div>
 
 </div>
