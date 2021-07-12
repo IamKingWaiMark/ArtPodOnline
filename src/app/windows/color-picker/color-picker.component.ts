@@ -91,6 +91,7 @@ export class ColorPickerComponent implements OnInit {
         this.leftClicked = true;
         this.colorPickerMode = ColorPickerMode.SLIDER;
         this.colorPicker.setMainSwatchSliderPosition(ev);
+        this.colorPicker.emitSwatch();
         break;
     }
   }
@@ -102,6 +103,7 @@ export class ColorPickerComponent implements OnInit {
         this.leftClicked = true;
         this.colorPickerMode = ColorPickerMode.PICKER;
         this.colorPicker.setMainSwatchCirclePosition(ev);
+        this.colorPicker.emitSwatch();
         break;
     }
   }

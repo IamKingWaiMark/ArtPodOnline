@@ -1,11 +1,12 @@
-import { XY } from "./math";
+import { Vector2D } from "./vectors";
+
 
 export class MouseUtilities {
-    isGoingLeft(lastMousePosition: XY, currentMousePosition: XY){
+    isGoingLeft(lastMousePosition: Vector2D, currentMousePosition: Vector2D){
         return currentMousePosition.x < lastMousePosition.x;
     }
 
-    isGoingRight(lastMousePosition: XY, currentMousePosition: XY){
+    isGoingRight(lastMousePosition: Vector2D, currentMousePosition: Vector2D){
         return currentMousePosition.x > lastMousePosition.x;
     }
 }
