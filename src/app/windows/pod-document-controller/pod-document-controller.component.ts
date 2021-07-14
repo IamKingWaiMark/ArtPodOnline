@@ -1,9 +1,10 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Component, Inject, Input, OnInit, PLATFORM_ID } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { FeatureInfo, PodFeatures } from 'src/app/pages/pod/pod.component';
+import { FeatureInfo } from 'src/app/tools/classes/feature-info';
 import { GlobalEvents } from 'src/app/tools/classes/global-events';
 import { Layer, PodDocument } from 'src/app/tools/classes/pod-document';
+import { PodFeature } from 'src/app/tools/enums/pod-feature';
 
 @Component({
   selector: 'app-pod-document-controller',
@@ -12,7 +13,7 @@ import { Layer, PodDocument } from 'src/app/tools/classes/pod-document';
 })
 export class PodDocumentControllerComponent implements OnInit {
   @Input() podDocumentsSubscription: BehaviorSubject<PodDocument[]>;
-  @Input() selectedPodFeatureSubscription: BehaviorSubject<PodFeatures>;
+  @Input() selectedPodFeatureSubscription: BehaviorSubject<PodFeature>;
   @Input() FEATURE_INFO: FeatureInfo;
   @Input() GLOBAL_EVENTS: GlobalEvents;
   

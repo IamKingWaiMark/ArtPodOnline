@@ -11,13 +11,13 @@
             (mouseup)="CANVAS_CONTAINER_onMouseUp($event)">
             <div id="pod-document-canvas-frame"
                 (mousemove)="CANVAS_FRAME_onMouseMove($event)">
-                <canvas class="bottom-canvas" [width]="activePodDocument?.getWidth()" [height]="activePodDocument?.getHeight()">
+                <canvas class="bottom-canvas">
 
                 </canvas>
-                <canvas class="draw-canvas" [width]="activePodDocument?.getWidth()" [height]="activePodDocument?.getHeight()">
+                <canvas class="draw-canvas">
                     
                 </canvas>
-                <canvas class="top-canvas" [width]="activePodDocument?.getWidth()" [height]="activePodDocument?.getHeight()">
+                <canvas class="top-canvas">
                     
                 </canvas>
             </div>
