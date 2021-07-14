@@ -1,9 +1,10 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { FeatureInfo } from 'src/app/tools/classes/feature-info';
 import { GlobalEvents, HotKey } from 'src/app/tools/classes/global-events';
 import { PodDocument } from 'src/app/tools/classes/pod-document';
-import { Swatch } from 'src/app/tools/classes/swatch';
+import { PodFeature } from 'src/app/tools/enums/pod-feature';
 import { PodFileAction } from 'src/app/tools/pod-app-tools/pod-app-tools.component';
 import { NewPodWindowAction, NewPodWindowActionData } from 'src/app/windows/new-pod-window/new-pod-window.component';
 
@@ -17,11 +18,11 @@ export class PodComponent implements OnInit {
   public readonly FEATURE_INFO: FeatureInfo = new FeatureInfo();
 
   public readonly DEFAULTS = {
-    POD_FEATURES: PodFeatures.MOVE
+    POD_FEATURES: PodFeature.MOVE
   }
 
   featureInfoSubscription = new BehaviorSubject<FeatureInfo>(this.FEATURE_INFO);
-  selectedPodFeatureSubscription = new BehaviorSubject<PodFeatures>(this.DEFAULTS.POD_FEATURES);
+  selectedPodFeatureSubscription = new BehaviorSubject<PodFeature>(this.DEFAULTS.POD_FEATURES);
   showNewPodWindow = true;
 
   podDocuments: PodDocument[] = [];
@@ -93,10 +94,10 @@ export class PodComponent implements OnInit {
   */
   onFeatureChanged(selectedFeature: string) {
     switch (selectedFeature) {
-      case "MOVE": this.selectedPodFeatureSubscription.next(PodFeatures.MOVE); break;
-      case "BRUSH": this.selectedPodFeatureSubscription.next(PodFeatures.BRUSH); break;
-      case "ERASER": this.selectedPodFeatureSubscription.next(PodFeatures.ERASER); break;
-      case "ZOOM": this.selectedPodFeatureSubscription.next(PodFeatures.ZOOM); break;
+      case "MOVE": this.selectedPodFeatureSubscription.next(PodFeature.MOVE); break;
+      case "BRUSH": this.selectedPodFeatureSubscription.next(PodFeature.BRUSH); break;
+      case "ERASER": this.selectedPodFeatureSubscription.next(PodFeature.ERASER); break;
+      case "ZOOM": this.selectedPodFeatureSubscription.next(PodFeature.ZOOM); break;
     }
     this.FEATURE_INFO.setShouldShowContextMenu(false);
   }
@@ -145,72 +146,4 @@ export class PodComponent implements OnInit {
 }
 
 
-export enum PodFeatures {
-  MOVE = "MOVE",
-  BRUSH = "BRUSH",
-  ERASER = "#00000000",
-  ZOOM = "ZOOM"
-}
-export class FeatureInfo {
-  private eraserSize = 50;
-  private mouseX = 0;
-  private mouseY = 0;
-  private shouldShowContextMenu = false;
-  // BRUSH
-  private brushSize = 50;
-  private brushColor: { r: number, g: number, b: number } = { r: 0, g: 0, b: 0 };
 
-
-  public getBrushColor() {
-    return this.brushColor ? this.brushColor : { r: 255, g: 255, b: 255 };
-  }
-  public setBrushColor(swatch: Swatch) {
-    this.brushColor = swatch.color;
-  }
-  public getEraserSize() {
-    return this.eraserSize;
-  }
-
-  public setEraserSize(eraserSize: number) {
-    this.eraserSize = eraserSize;
-  }
-
-  public getBrushSize() {
-    return this.brushSize;
-  }
-
-  public setBrushSize(brushSize: number) {
-    this.brushSize = brushSize;
-  }
-
-  public getMouseX() {
-    return this.mouseX;
-  }
-
-  public setMouseX(mouseX: number) {
-    this.mouseX = mouseX;
-  }
-  public getMouseY() {
-    return this.mouseY;
-  }
-
-  public setMouseY(mouseY: number) {
-    this.mouseY = mouseY;
-  }
-
-  public getShouldShowContextMenu() {
-    return this.shouldShowContextMenu;
-  }
-
-  public setShouldShowContextMenu(show: boolean) {
-    this.shouldShowContextMenu = show;
-  }
-
-  /**Returns the current feature size */
-  public getUtensilSize(selectedPodFeature: PodFeatures) {
-    switch (selectedPodFeature) {
-      case PodFeatures.BRUSH: return this.getBrushSize();
-      case PodFeatures.ERASER: return this.getEraserSize();
-    }
-  }
-}
