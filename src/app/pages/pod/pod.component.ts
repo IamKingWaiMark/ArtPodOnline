@@ -88,6 +88,9 @@ export class PodComponent implements OnInit {
       }
       this.GLOBAL_EVENTS.GLOBAL_KEYDOWN_EVENT.emit(ev);
     });
+    window.addEventListener("resize", (ev: UIEvent) => {
+      this.GLOBAL_EVENTS.GLOBAL_WINDOW_RESIZE.emit(ev);
+    });
   }
   /*
     POD
@@ -97,6 +100,7 @@ export class PodComponent implements OnInit {
       case "MOVE": this.selectedPodFeatureSubscription.next(PodFeature.MOVE); break;
       case "BRUSH": this.selectedPodFeatureSubscription.next(PodFeature.BRUSH); break;
       case "ERASER": this.selectedPodFeatureSubscription.next(PodFeature.ERASER); break;
+      case "FILL": this.selectedPodFeatureSubscription.next(PodFeature.FILL); break;
       case "ZOOM": this.selectedPodFeatureSubscription.next(PodFeature.ZOOM); break;
     }
     this.FEATURE_INFO.setShouldShowContextMenu(false);

@@ -7,7 +7,7 @@ export class GlobalEvents {
     public readonly GLOBAL_KEYDOWN_EVENT = new EventEmitter<KeyboardEvent>();
     public readonly GLOBAL_KEYUP_EVENT = new EventEmitter<KeyboardEvent>();
     public readonly GLOBAL_HOT_KEY_EVENT = new EventEmitter<HotKey>();
-    
+    public readonly GLOBAL_WINDOW_RESIZE = new EventEmitter<UIEvent>();
 }
 
 export enum HotKey {
