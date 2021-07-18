@@ -44,6 +44,7 @@ export class PodDocumentControllerComponent implements OnInit {
   }
 
   onTabClick(tabIndex: number){
+    if(this.activeTabIndex == tabIndex) return;
     this.activeTabIndex = tabIndex;
     this.activePodDocumentSubscription.next(this.getCurrentPodDocument());
   }

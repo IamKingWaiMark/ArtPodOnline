@@ -7,18 +7,17 @@ export class PodDocument {
     private metaData: PodDocMetaData;
     private layers: Layer[] = [];
     private layerCounter = 1;
-    private documentScale = 0;
+    private activeLayer: Layer;
 
 
     constructor(metaData: PodDocMetaData) {
         this.metaData = metaData;
-        this.metaData.zoomScale = 1;
-        this.metaData.position = { x: 0, y: 0 };
     }
 
     addLayer(index: number) {
         let layer = new Layer(`Layer ${this.layerCounter++}`);
         this.layers.splice(index, 0, layer);
+        this.setActiveLayer(layer);
         return layer;
     }
 
@@ -27,29 +26,12 @@ export class PodDocument {
             this.layers.splice(index, 1);
     }
 
-    addBackgroundLayer() {
-
-    }
 
     getZoomPercent() {
         return (this.metaData.zoomScale * 100).toFixed(2) + "%";
     }
 
-    setZoomScale(scale: number) {
-        this.metaData.zoomScale = scale;
-    }
 
-    setPosition(x: number, y: number) {
-        this.metaData.position = { x, y };
-    }
-
-    setDocumentScale(scale: number) {
-        this.documentScale = scale;
-    }
-
-    getPosition() {
-        return this.metaData.position;
-    }
 
     getZoomScale() {
         return this.metaData.zoomScale;
@@ -67,11 +49,21 @@ export class PodDocument {
         return this.layers;
     }
 
-    getDocumentScale() {
-        return this.documentScale;
+    setWorldPosition(position: Vector2D){
+        this.metaData.worldPosition = position;
     }
 
+    getActiveLayer(){
+        return this.activeLayer;
+    }
 
+    setZoomScale(scale: number) {
+        this.metaData.zoomScale = scale;
+    }
+
+    setActiveLayer(layer: Layer){
+        this.activeLayer = layer;
+    }
 
 
 }
@@ -80,9 +72,18 @@ export interface PodDocMetaData {
     docName: string,
     podPreset: PodPreset,
     zoomScale: number;
-    position: { x: number, y: number }
+    worldPosition: Vector2D;
+}
+export interface DrawPoint {
+    mousePos: Vector2D;
 }
 
+export interface ActionData {
+    pixel?: Vector2D;
+    fill?: { r: number, g: number, b: number }
+    mousePos?: Vector2D;
+    utensilSize?: number;
+}
 
 export class Layer {
     name: string;
@@ -99,12 +100,16 @@ export class Layer {
         this.visible = this.visible ? false : true;
     }
 
-    setAction(podFeature: PodFeature, data: DrawPoint){
+    setAction(podFeature: PodFeature, data: ActionData){
         switch(podFeature) {
             case PodFeature.BRUSH: 
-                let brushAction = new BrushAction();
-                brushAction.addToData(data);
+                let brushAction = new BrushAction(data);
+                brushAction.addToData(<DrawPoint>data);
                 this.actions.push(brushAction);
+                break;
+            case PodFeature.FILL: 
+                let fillAction = new FillAction(data);
+                this.actions.push(fillAction);
                 break;
         }
     }
@@ -114,14 +119,15 @@ export class Layer {
     }
 }
 
-export interface DrawPoint {
-    mousePos: Vector2D;
-    fill: { r: number, g: number, b: number }
-    utensilSize: number;
-}
+
 export class LayerAction {
     data: DrawPoint [] = [];
-
+    fill: {r: number, g: number, b: number} = {r: 0, g: 0, b: 0};
+    utensilSize: number;
+    constructor(actionData: ActionData){
+        this.fill = actionData.fill;
+        this.utensilSize = actionData.utensilSize;
+    }
     render(canvas: HTMLCanvasElement) {
 
     }
@@ -132,8 +138,53 @@ export class LayerAction {
         return this.data;
     }
 
-    addToData(data: DrawPoint){
-        this.data.push(data);
+    addToData<T extends DrawPoint>(data: DrawPoint) {
+        this.data.push(<T>data);
+    }
+}
+
+export class FillAction extends LayerAction {
+    fillDetectorColor: {r: number, g: number, b: number};
+    onDraw(canvas: HTMLCanvasElement, mousePos: Vector2D){
+        let utensil = canvas.getContext("2d");
+        utensil.fillStyle = "rgb(255,0,0)";
+        utensil.fillRect(0, 0, canvas.width, canvas.height);
+        this.fillDetectorColor = {r: 255, g: 0, b: 0};
+        this.fillArea(mousePos, utensil);
+        
+
+    }
+    fillArea(startPixel: Vector2D, utensil: CanvasRenderingContext2D) {
+
+    } 
+    pixelIsSameAsFill(pixelPos: Vector2D, utensil: CanvasRenderingContext2D){
+        let pixelColor = this.getPixelColorAt(pixelPos, utensil);
+        let matchRed = pixelColor.r == this.fill.r;
+        let matchGreen = pixelColor.g == this.fill.g;
+        let matchBlue = pixelColor.b == this.fill.b;
+        return matchRed && matchGreen && matchBlue;
+    }
+    pixelIsInside(pixelPos: Vector2D, utensil: CanvasRenderingContext2D){
+        let pixelColor = this.getPixelColorAt(pixelPos, utensil);
+        let matchRed = pixelColor.r == this.fillDetectorColor.r;
+        let matchGreen = pixelColor.g == this.fillDetectorColor.g;
+        let matchBlue = pixelColor.b == this.fillDetectorColor.b;
+        return matchRed && matchGreen && matchBlue;
+    }
+
+    getPixelColorAt(pixelPos: Vector2D, utensil: CanvasRenderingContext2D){
+        let pixelColorOnCanvas = utensil.getImageData(pixelPos.x, pixelPos.y, 1, 1);
+        return {r: pixelColorOnCanvas.data[0], g: pixelColorOnCanvas.data[1], b: pixelColorOnCanvas.data[2]};
+    }
+    getData(): DrawPoint [] {
+        return <DrawPoint []>this.data;
+    }
+
+    getLastDrawPoint(){
+        if(this.data.length > 0) {
+            return this.data[this.data.length - 1];
+        } 
+        return null;
     }
 }
 
@@ -144,10 +195,10 @@ export class BrushAction extends LayerAction {
         let utensil = canvas.getContext("2d");
         
         for (let i = 1; i < drawPoints.length; i++) {
-            let lastDrawPoint = this.getLastDrawPointBefore(i);
-            let fill = lastDrawPoint.fill;
+            let lastDrawPoint = this.getDrawPointBefore(i);
+            let fill = this.fill;
             utensil.beginPath();
-            utensil.lineWidth = lastDrawPoint.utensilSize;
+            utensil.lineWidth = this.utensilSize;
             utensil.strokeStyle = `rgb(${fill.r}, ${fill.g}, ${fill.b})`;
             utensil.lineCap = "round";
             utensil.moveTo(lastDrawPoint.mousePos.x, lastDrawPoint.mousePos.y);
@@ -162,8 +213,8 @@ export class BrushAction extends LayerAction {
         let utensil = drawCanvas.getContext("2d");
         let lastDrawPoint = this.getLastDrawPoint();
         utensil.beginPath();
-        utensil.lineWidth = lastDrawPoint.utensilSize;
-        utensil.strokeStyle = `rgb(${lastDrawPoint.fill.r}, ${lastDrawPoint.fill.g}, ${lastDrawPoint.fill.b})`;
+        utensil.lineWidth = this.utensilSize;
+        utensil.strokeStyle = `rgb(${this.fill.r}, ${this.fill.g}, ${this.fill.b})`;
         utensil.lineCap = "round";
         
         utensil.moveTo(lastDrawPoint.mousePos.x, lastDrawPoint.mousePos.y);
@@ -171,26 +222,24 @@ export class BrushAction extends LayerAction {
         utensil.stroke();
         this.getData().push(
           {
-            mousePos: currentMousePos, 
-            fill: lastDrawPoint.fill,
-            utensilSize: lastDrawPoint.utensilSize
+            mousePos: currentMousePos
           }
         );
     }
 
     getData(): DrawPoint [] {
-        return this.data;
+        return <DrawPoint []>this.data;
     }
 
-    getLastDrawPoint(){
+    getLastDrawPoint(): DrawPoint {
         if(this.data.length > 0) {
-            return this.data[this.data.length - 1];
+            return <DrawPoint>this.data[this.data.length - 1];
         } 
         return null;
     }
-    getLastDrawPointBefore(index: number){
+    getDrawPointBefore(index: number): DrawPoint {
         if(this.data.length > 0) {
-            return this.data[index - 1];
+            return <DrawPoint>this.data[index - 1];
         } 
         return null;
     }
