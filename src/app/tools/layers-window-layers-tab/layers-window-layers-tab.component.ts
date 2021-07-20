@@ -32,13 +32,17 @@ export class LayersWindowLayersTabComponent implements OnInit {
   onAddLayerClick(){
     this.activePodDocument.addLayer(this.activeLayerIndex);
     this.clampActiveLayerIndex();
-    this.activeLayerSubscription.next(this.activePodDocument.getLayers()[this.activeLayerIndex]);
+    let activeLayer = this.activePodDocument.getLayers()[this.activeLayerIndex];
+    this.activePodDocument.setActiveLayer(activeLayer);
+    this.activeLayerSubscription.next(activeLayer);
   }
   
   onDeleteLayerClick(){
     this.activePodDocument.deleteLayer(this.activeLayerIndex);
     this.clampActiveLayerIndex();
-    this.activeLayerSubscription.next(this.activePodDocument.getLayers()[this.activeLayerIndex]);
+    let activeLayer = this.activePodDocument.getLayers()[this.activeLayerIndex];
+    this.activePodDocument.setActiveLayer(activeLayer);
+    this.activeLayerSubscription.next(activeLayer);
   }
 
   clampActiveLayerIndex(){

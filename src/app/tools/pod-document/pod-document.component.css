@@ -69,3 +69,10 @@
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
 }
+
+
+.bottom-canvas, .draw-canvas, .top-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
