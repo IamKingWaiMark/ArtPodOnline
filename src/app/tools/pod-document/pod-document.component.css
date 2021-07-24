@@ -22,7 +22,7 @@
     left: 0;
     height: 100%;
     width: 100%;
-    overflow: auto;
+    overflow: hidden;
     cursor: none;
 }
 
@@ -35,6 +35,7 @@
     width: 0px;
     background-image: url("../../../assets/transparent_bg.jpg");
     background-repeat: repeat;
+    overflow: hidden;
 }
 
 #pod-document-cursor {

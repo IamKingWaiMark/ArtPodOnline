@@ -1,5 +1,6 @@
 
 import { PodFeature } from "../enums/pod-feature";
+import { PodDocumentComponent } from "../pod-document/pod-document.component";
 import { PodPreset } from "./pod-preset";
 import { Vector2D } from "./vectors";
 
@@ -58,6 +59,14 @@ export class PodDocument {
         this.worldPosition = position;
     }
 
+    setWorldXPosition(xPos: number) {
+        this.worldPosition.x = xPos;
+    }
+
+    setWorldYPosition(yPos: number) {
+        this.worldPosition.y = yPos;
+    }
+
     getActiveLayer(){
         return this.activeLayer;
     }
@@ -86,6 +95,7 @@ export class Layer {
     name: string;
     visible = true;
     actions: LayerAction [] = [];
+    podDocComp: PodDocumentComponent;
     constructor(name: string) {
         this.name = name;
     }
@@ -97,11 +107,11 @@ export class Layer {
         this.visible = this.visible ? false : true;
     }
 
-    setAction(podFeature: PodFeature, data: ActionData){
-        switch(podFeature) {
+    setAction(podDocComp: PodDocumentComponent, data: ActionData){
+        this.podDocComp = podDocComp;
+        switch(this.podDocComp.selectedPodFeature) {
             case PodFeature.BRUSH: 
-                let brushAction = new BrushAction(data);
-                brushAction.addToData(<DrawPoint>data);
+                let brushAction = new BrushAction(this, data);
                 this.actions.push(brushAction);
                 break;
         }
@@ -124,7 +134,9 @@ export class LayerAction {
     fill: {r: number, g: number, b: number} = {r: 0, g: 0, b: 0};
     utensilSize: number;
     startTime: Date;
-    constructor(actionData: ActionData){
+    layer: Layer;
+    constructor(layer: Layer, actionData: ActionData){
+        this.layer = layer;
         this.fill = actionData.fill;
         this.utensilSize = actionData.utensilSize;
         this.startTime = new Date();
@@ -160,6 +172,19 @@ export class LayerAction {
 
 export class BrushAction extends LayerAction {
 
+    constructor(layer: Layer, actionData: ActionData){
+        super(layer, actionData);
+        let canvasDimensions = this.layer.podDocComp.RENDER_ACTIONS.getDrawCanvas().getBoundingClientRect();
+        let offsetByScale = this.layer.podDocComp.activePodDocument.getZoomScale() / this.layer.podDocComp.activePodDocument.getInitialZoomScale();
+        let lineOffset = {
+          x: canvasDimensions.x, 
+          y: canvasDimensions.y}
+        let calculatedMousePos = {
+            x: ((actionData.mousePos.x - lineOffset.x) / offsetByScale) - this.layer.podDocComp.activePodDocument.getWorldPosition().x / offsetByScale, 
+            y: ((actionData.mousePos.y - lineOffset.y) / offsetByScale) - this.layer.podDocComp.activePodDocument.getWorldPosition().y / offsetByScale}
+        actionData.mousePos = calculatedMousePos;
+        this.addToData(<DrawPoint>actionData);
+    }
     render(canvas: HTMLCanvasElement, activeDocument: PodDocument) {
         let drawPoints = this.getData();
         let utensil = canvas.getContext("2d");
@@ -172,11 +197,11 @@ export class BrushAction extends LayerAction {
             let lastDrawPoint = this.getDrawPointBefore(i);
             utensil.beginPath();
             utensil.moveTo(
-                (lastDrawPoint.mousePos.x * offsetByScale), 
-                (lastDrawPoint.mousePos.y * offsetByScale));
+                (lastDrawPoint.mousePos.x * offsetByScale) + activeDocument.getWorldPosition().x /** offsetByScale*/, 
+                (lastDrawPoint.mousePos.y * offsetByScale) + activeDocument.getWorldPosition().y /** offsetByScale*/);
             utensil.lineTo(
-                (drawPoints[i].mousePos.x * offsetByScale), 
-                (drawPoints[i].mousePos.y * offsetByScale));
+                (drawPoints[i].mousePos.x * offsetByScale) + activeDocument.getWorldPosition().x /** offsetByScale*/, 
+                (drawPoints[i].mousePos.y * offsetByScale) + activeDocument.getWorldPosition().y /** offsetByScale*/);
            
             utensil.stroke();
         }
@@ -193,24 +218,26 @@ export class BrushAction extends LayerAction {
         utensil.lineWidth = this.utensilSize * activeDocument.getZoomScale();
         utensil.strokeStyle = `rgb(${this.fill.r}, ${this.fill.g}, ${this.fill.b})`;
         utensil.lineCap = "round";
-        let lineOffset = this.getOffset(canvas, activeDocument);
+        let lineOffset = this.getOffset(canvas);
         let offsetByScale = activeDocument.getZoomScale() / activeDocument.getInitialZoomScale();
         utensil.moveTo(
-            (lastDrawPoint.mousePos.x * offsetByScale),
-            (lastDrawPoint.mousePos.y * offsetByScale));
+            (lastDrawPoint.mousePos.x * offsetByScale) + activeDocument.getWorldPosition().x,
+            (lastDrawPoint.mousePos.y * offsetByScale) + activeDocument.getWorldPosition().y);
         utensil.lineTo(
             (currentMousePos.x) - lineOffset.x, 
             (currentMousePos.y) - lineOffset.y);
         utensil.stroke();
-        let calculatedMousePos = {x: (currentMousePos.x - lineOffset.x) / offsetByScale, y: (currentMousePos.y - lineOffset.y) / offsetByScale}
+        let calculatedMousePos = {
+            x: ((currentMousePos.x - lineOffset.x) / offsetByScale) - activeDocument.getWorldPosition().x / offsetByScale, 
+            y: ((currentMousePos.y - lineOffset.y) / offsetByScale) - activeDocument.getWorldPosition().y / offsetByScale}
         this.getData().push( {mousePos: calculatedMousePos});
     }
 
-    getOffset(canvas: HTMLCanvasElement, activeDocument: PodDocument): Vector2D{
+    getOffset(canvas: HTMLCanvasElement): Vector2D{
         let canvasDimensions = canvas.getBoundingClientRect();
         return {
-            x: canvasDimensions.x + activeDocument.getWorldPosition().x, 
-            y: canvasDimensions.y + activeDocument.getWorldPosition().y};
+            x: canvasDimensions.x, 
+            y: canvasDimensions.y};
     }
 
     getData(): DrawPoint [] {
