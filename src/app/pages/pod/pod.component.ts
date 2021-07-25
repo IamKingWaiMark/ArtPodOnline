@@ -77,6 +77,10 @@ export class PodComponent implements OnInit {
       } else if (CTRL_KEY) {
         ev.preventDefault();
         ev.stopPropagation();
+        switch (ev.key.toLowerCase()) {
+          case "z": this.GLOBAL_EVENTS.GLOBAL_HOT_KEY_EVENT.emit(HotKey.UNDO); break;
+          case "y": this.GLOBAL_EVENTS.GLOBAL_HOT_KEY_EVENT.emit(HotKey.REDO); break;
+        }
       } else if (ev.shiftKey) {
         ev.preventDefault();
         ev.stopPropagation();

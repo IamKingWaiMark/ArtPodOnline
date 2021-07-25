@@ -14,5 +14,7 @@ export enum HotKey {
     SWAP_SWATCH,
     NEW_POD,
     MOVE_POD_DCOUMENT,
-    SAVE_AS
+    SAVE_AS,
+    UNDO,
+    REDO
 }

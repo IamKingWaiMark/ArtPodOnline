@@ -1,10 +1,14 @@
-
+import { AppActionType } from "../enums/app-action-type";
 import { PodFeature } from "../enums/pod-feature";
+import { DrawActionData } from "../interfaces/app-action-data";
 import { PodDocumentComponent } from "../pod-document/pod-document.component";
+import { AppAction } from "./app-action";
 import { PodPreset } from "./pod-preset";
 import { Vector2D } from "./vectors";
 
 export class PodDocument {
+
+    private readonly MAX_UNDOS = 50;
     private metaData: PodDocMetaData;
     private layers: Layer[] = [];
     private layerCounter = 1;
@@ -13,6 +17,8 @@ export class PodDocument {
     private initialZoomScale: number = null;
     private worldPosition: Vector2D;
 
+    private undoActions: AppAction [] = [];
+    private redoActions: AppAction [] = [];
     constructor(metaData: PodDocMetaData) {
         this.metaData = metaData;
         this.setWorldPosition({x: 0, y:0});
@@ -88,7 +94,35 @@ export class PodDocument {
     }
 
 
+    undo(){
+        if(this.undoActions.length > 0) {
+            let undoAction = this.undoActions[this.undoActions.length-1];
+            undoAction.undo();
+            this.redoActions.push(undoAction);
+            this.undoActions.pop();
+        }
+    }
+
+    redo(){
+        if(this.redoActions.length > 0) {
+            let redoAction = this.redoActions[this.redoActions.length-1];
+            redoAction.redo();
+            this.undoActions.push(redoAction);
+            this.redoActions.pop();
+        }
+    }
+
+    addToUndoActions(action: AppAction){
+        this.undoActions.push(action);
+        if(this.redoActions.length > 0) this.redoActions = [];
+        if(this.undoActions.length > this.MAX_UNDOS) this.undoActions.splice(0, 1);
+    }
+
 }
+
+
+
+
 
 
 export class Layer {
@@ -109,12 +143,24 @@ export class Layer {
 
     setAction(podDocComp: PodDocumentComponent, data: ActionData){
         this.podDocComp = podDocComp;
+        let action: LayerAction;
         switch(this.podDocComp.selectedPodFeature) {
             case PodFeature.BRUSH: 
-                let brushAction = new BrushAction(this, data);
-                this.actions.push(brushAction);
+                action = new BrushAction(this, data);
+                this.actions.push(action);
+                break;
+            case PodFeature.FILL:
+                action = new FillAction(this, data);
+                this.actions.push(action);
                 break;
         }
+        this.podDocComp.activePodDocument.addToUndoActions(
+            new AppAction(AppActionType.DRAW, 
+                <DrawActionData>{
+                    layer: this,
+                    action
+                })
+        );
     }
 
     offsetMousePosWithScale(mousePos: Vector2D, activeDocument: PodDocument) {
@@ -130,7 +176,7 @@ export class Layer {
 
 
 export class LayerAction {
-    data: DrawPoint [] = [];
+    data: any = [];
     fill: {r: number, g: number, b: number} = {r: 0, g: 0, b: 0};
     utensilSize: number;
     startTime: Date;
@@ -138,7 +184,7 @@ export class LayerAction {
     constructor(layer: Layer, actionData: ActionData){
         this.layer = layer;
         this.fill = actionData.fill;
-        this.utensilSize = actionData.utensilSize;
+        this.utensilSize = actionData.utensilSize; 
         this.startTime = new Date();
     }
     render(canvas: HTMLCanvasElement, activeDocument: PodDocument) {
@@ -164,24 +210,29 @@ export class LayerAction {
         return this.data;
     }
 
-    addToData<T extends DrawPoint>(data: DrawPoint) {
+    addToData<T>(data: T) {
         this.data.push(<T>data);
     }
 }
 
+export class FillAction extends LayerAction {
+   
+
+}
 
 export class BrushAction extends LayerAction {
 
     constructor(layer: Layer, actionData: ActionData){
         super(layer, actionData);
+        let activeDocument = this.layer.podDocComp.activePodDocument;
         let canvasDimensions = this.layer.podDocComp.RENDER_ACTIONS.getDrawCanvas().getBoundingClientRect();
         let offsetByScale = this.layer.podDocComp.activePodDocument.getZoomScale() / this.layer.podDocComp.activePodDocument.getInitialZoomScale();
         let lineOffset = {
           x: canvasDimensions.x, 
           y: canvasDimensions.y}
         let calculatedMousePos = {
-            x: ((actionData.mousePos.x - lineOffset.x) / offsetByScale) - this.layer.podDocComp.activePodDocument.getWorldPosition().x / offsetByScale, 
-            y: ((actionData.mousePos.y - lineOffset.y) / offsetByScale) - this.layer.podDocComp.activePodDocument.getWorldPosition().y / offsetByScale}
+            x: ((actionData.mousePos.x - lineOffset.x) / offsetByScale) - activeDocument.getWorldPosition().x / offsetByScale, 
+            y: ((actionData.mousePos.y - lineOffset.y) / offsetByScale) - activeDocument.getWorldPosition().y / offsetByScale}
         actionData.mousePos = calculatedMousePos;
         this.addToData(<DrawPoint>actionData);
     }
@@ -213,7 +264,8 @@ export class BrushAction extends LayerAction {
 
         let utensil = drawCanvas.getContext("2d");
         let lastDrawPoint = this.getLastDrawPoint();
-
+        let zoomScale = activeDocument.getZoomScale();
+        zoomScale > 1? 1: zoomScale;
         utensil.beginPath();
         utensil.lineWidth = this.utensilSize * activeDocument.getZoomScale();
         utensil.strokeStyle = `rgb(${this.fill.r}, ${this.fill.g}, ${this.fill.b})`;
@@ -266,6 +318,7 @@ export interface PodDocMetaData {
 export interface DrawPoint {
     mousePos: Vector2D;
 }
+
 export interface ActionData {
     pixel?: Vector2D;
     fill?: { r: number, g: number, b: number }
@@ -273,49 +326,3 @@ export interface ActionData {
     utensilSize?: number;
 }
 
-/*
-
-export class FillAction extends LayerAction {
-    fillDetectorColor: {r: number, g: number, b: number};
-    onDraw(canvas: HTMLCanvasElement, mousePos: Vector2D){
-        let utensil = canvas.getContext("2d");
-        utensil.fillStyle = "rgb(255,0,0)";
-        utensil.fillRect(0, 0, canvas.width, canvas.height);
-        this.fillDetectorColor = {r: 255, g: 0, b: 0};
-        this.fillArea(mousePos, utensil);
-        
-
-    }
-    fillArea(startPixel: Vector2D, utensil: CanvasRenderingContext2D) {
-
-    } 
-    pixelIsSameAsFill(pixelPos: Vector2D, utensil: CanvasRenderingContext2D){
-        let pixelColor = this.getPixelColorAt(pixelPos, utensil);
-        let matchRed = pixelColor.r == this.fill.r;
-        let matchGreen = pixelColor.g == this.fill.g;
-        let matchBlue = pixelColor.b == this.fill.b;
-        return matchRed && matchGreen && matchBlue;
-    }
-    pixelIsInside(pixelPos: Vector2D, utensil: CanvasRenderingContext2D){
-        let pixelColor = this.getPixelColorAt(pixelPos, utensil);
-        let matchRed = pixelColor.r == this.fillDetectorColor.r;
-        let matchGreen = pixelColor.g == this.fillDetectorColor.g;
-        let matchBlue = pixelColor.b == this.fillDetectorColor.b;
-        return matchRed && matchGreen && matchBlue;
-    }
-
-    getPixelColorAt(pixelPos: Vector2D, utensil: CanvasRenderingContext2D){
-        let pixelColorOnCanvas = utensil.getImageData(pixelPos.x, pixelPos.y, 1, 1);
-        return {r: pixelColorOnCanvas.data[0], g: pixelColorOnCanvas.data[1], b: pixelColorOnCanvas.data[2]};
-    }
-    getData(): DrawPoint [] {
-        return <DrawPoint []>this.data;
-    }
-
-    getLastDrawPoint(){
-        if(this.data.length > 0) {
-            return this.data[this.data.length - 1];
-        } 
-        return null;
-    }
-}*/
