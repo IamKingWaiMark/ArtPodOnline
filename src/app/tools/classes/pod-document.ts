@@ -194,7 +194,7 @@ export class LayerAction {
         let nowTime = new Date();
         let elapsed = nowTime.getTime() - this.startTime.getTime();
         
-        if(elapsed >= 17 || elapsed == 0) {
+        if(elapsed >= 24 || elapsed == 0) {
             this.startTime = nowTime;
         } else {
             return;

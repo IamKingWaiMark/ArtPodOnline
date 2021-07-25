@@ -403,7 +403,7 @@ export class ZoomActions extends MouseActions {
 
     let nowTime = new Date();
     let elapsed = nowTime.getTime() - this.startOfZoom.getTime();
-    if (elapsed > 5) {
+    if (elapsed > 10) {
       this.startOfZoom = nowTime;
       this.podDocComp.RENDER_ACTIONS.render();
     }
