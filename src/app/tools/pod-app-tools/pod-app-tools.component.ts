@@ -27,18 +27,18 @@ export class PodAppToolsComponent implements OnInit {
       (ev: MouseEvent) => {
         let actionLists = document.getElementsByClassName("pod-tool-action-list");
         var clickedOutside = true;
-        for(let i = 0; i < actionLists.length; i++) {
+        for (let i = 0; i < actionLists.length; i++) {
           let actionList = <HTMLDivElement>actionLists[i];
           let dimensions = actionList.getBoundingClientRect();
-          if(ev.x >= dimensions.x && ev.x <= dimensions.x + dimensions.width &&
+          if (ev.x >= dimensions.x && ev.x <= dimensions.x + dimensions.width &&
             ev.y >= dimensions.y && ev.y <= dimensions.y + dimensions.height) {
-              clickedOutside = false;
-            }
+            clickedOutside = false;
+          }
         }
-        if(clickedOutside) {
+        if (clickedOutside) {
           this.activePodTool = null;
         }
-        
+
       }
     );
   }
@@ -75,10 +75,10 @@ export class PodAppToolsComponent implements OnInit {
         this.FILE_ACTIONS.emit(PodFileAction.NEW);
         break;
       case "save_as":
-          this.FILE_ACTIONS.emit(PodFileAction.SAVE_AS);
+        this.FILE_ACTIONS.emit(PodFileAction.SAVE_AS);
         break;
       case "import":
-          this.FILE_ACTIONS.emit(PodFileAction.IMPORT);
+        this.FILE_ACTIONS.emit(PodFileAction.IMPORT);
         break;
     }
     this.activePodTool = null;
@@ -88,6 +88,9 @@ export class PodAppToolsComponent implements OnInit {
     switch (action.toLowerCase()) {
       case "undo":
         this.EDIT_ACTIONS.emit(PodEditAction.UNDO);
+        break;
+      case "redo":
+        this.EDIT_ACTIONS.emit(PodEditAction.REDO);
         break;
     }
     this.activePodTool = null;
@@ -107,6 +110,7 @@ export enum PodFileAction {
 }
 
 export enum PodEditAction {
-  UNDO
+  UNDO,
+  REDO
 }
 

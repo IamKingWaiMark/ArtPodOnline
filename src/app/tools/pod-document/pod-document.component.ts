@@ -30,13 +30,13 @@ export class PodDocumentComponent implements OnInit {
   @Input() FEATURE_INFO: FeatureInfo;
   @Input() GLOBAL_EVENTS: GlobalEvents;
 
-  CURSOR_ACTIONS: CursorActions = null; 
+  CURSOR_ACTIONS: CursorActions = null;
   DOCUMENT_ACTIONS: PodDocumentActions = null;
   SAVE_ACTIONS: PodDocumentSaveActions = null;
   ZOOM_ACTIONS: ZoomActions = null;
   MOVE_ACTIONS: MoveActions = null;
   RENDER_ACTIONS: RenderActions = null;
-  GLOBAL_MOUSE_POS: Vector2D = {x: 0, y: 0};
+  GLOBAL_MOUSE_POS: Vector2D = { x: 0, y: 0 };
   mouseUtilities = new MouseUtilities();
   documentState: PodDocumentState = null;
   stateSubscription = new BehaviorSubject<PodDocumentState>(this.documentState);
@@ -54,21 +54,21 @@ export class PodDocumentComponent implements OnInit {
       this.DOCUMENT_ACTIONS = new PodDocumentActions(this);
       this.CURSOR_ACTIONS = new CursorActions(this);
       this.SAVE_ACTIONS = new PodDocumentSaveActions();
-      
+
       this.subscribeToActiveLayer();
       this.subscribeToDocumentStates();
       this.subscribeToPodFeatures();
       this.subscribeToGlobalEvents();
       this.subscribeToActivePodDocument();
-      
+
     }
   }
 
-  subscribeToActiveLayer(){
+  subscribeToActiveLayer() {
     this.activeLayerSubscription.subscribe(
       layer => {
         this.activePodDocument?.setActiveLayer(layer);
-        this.RENDER_ACTIONS.render();   
+        this.RENDER_ACTIONS.render();
       }
     );
   }
@@ -83,7 +83,7 @@ export class PodDocumentComponent implements OnInit {
     );
   }
 
-  subscribeToDocumentStates(){
+  subscribeToDocumentStates() {
     this.stateSubscription.subscribe(
       state => {
         this.CURSOR_ACTIONS.onMouseMove(state, this.selectedPodFeature, this.GLOBAL_MOUSE_POS);
@@ -102,23 +102,34 @@ export class PodDocumentComponent implements OnInit {
   subscribeToGlobalEvents() {
     this.GLOBAL_EVENTS.GLOBAL_HOT_KEY_EVENT.subscribe(
       (hotKey: HotKey) => {
+
         switch (hotKey) {
-          case HotKey.SAVE_AS: 
+          case HotKey.SAVE_AS:
             break;
-          case HotKey.MOVE_POD_DCOUMENT: 
+          case HotKey.MOVE_POD_DCOUMENT:
             this.setState(PodDocumentState.MOVE);
             break;
+          case HotKey.UNDO:
+            this.activePodDocument?.undo();
+            this.RENDER_ACTIONS.render();
+            break;
+          case HotKey.REDO:
+            this.activePodDocument?.redo();
+            this.RENDER_ACTIONS.render();
+            break;
         }
+
       }
     );
     this.GLOBAL_EVENTS.GLOBAL_KEYUP_EVENT.subscribe(
       (ev: KeyboardEvent) => {
-        this.setState(null); 
+        this.setState(null);
+
       }
     );
     this.GLOBAL_EVENTS.GLOBAL_MOUSE_UP_EVENT.subscribe(
       (ev: MouseEvent) => {
-        this.ZOOM_ACTIONS.stopZooming(); 
+        this.ZOOM_ACTIONS.stopZooming();
         this.MOVE_ACTIONS.stopMoving();
         this.RENDER_ACTIONS.setShouldEdit(false);
         this.RENDER_ACTIONS.render();
@@ -129,8 +140,8 @@ export class PodDocumentComponent implements OnInit {
         this.GLOBAL_MOUSE_POS.x = ev.x;
         this.GLOBAL_MOUSE_POS.y = ev.y;
 
-        if(this.mouseIsIn() && this.activePodDocument) {
-          switch(ev.button) {
+        if (this.mouseIsIn() && this.activePodDocument) {
+          switch (ev.button) {
             case 0: this.onMouseDown_leftClick(); break;
             case 2: this.onMouseDown_RightClick(); break;
           }
@@ -142,18 +153,18 @@ export class PodDocumentComponent implements OnInit {
       (ev: MouseEvent) => {
         this.GLOBAL_MOUSE_POS.x = ev.x;
         this.GLOBAL_MOUSE_POS.y = ev.y;
-        if(this.mouseIsIn() && this.activePodDocument) {
+        if (this.mouseIsIn() && this.activePodDocument) {
           this.CURSOR_ACTIONS.onMouseMove(this.documentState, this.selectedPodFeature, this.GLOBAL_MOUSE_POS);
-        
-          if(this.documentState) {
-            switch(this.documentState) {
+
+          if (this.documentState) {
+            switch (this.documentState) {
               case PodDocumentState.MOVE: this.MOVE_ACTIONS.onMouseMove(); break;
             }
           } else {
-            switch(this.selectedPodFeature) {
+            switch (this.selectedPodFeature) {
               case PodFeature.ZOOM: this.ZOOM_ACTIONS.onMouseMove(); break;
-              case PodFeature.BRUSH: 
-                if(!this.RENDER_ACTIONS.getShouldEdit()) return;
+              case PodFeature.BRUSH:
+                if (!this.RENDER_ACTIONS.getShouldEdit()) return;
                 this.activePodDocument.getActiveLayer().getCurrentAction()?.onDraw(
                   this.RENDER_ACTIONS.getDrawCanvas(),
                   this.GLOBAL_MOUSE_POS,
@@ -166,37 +177,39 @@ export class PodDocumentComponent implements OnInit {
           this.CURSOR_ACTIONS.hideCursor();
           this.ZOOM_ACTIONS.stopZooming();
           this.MOVE_ACTIONS.stopMoving();
-          //this.RENDER_ACTIONS.render();         
         }
 
       }
     );
     this.GLOBAL_EVENTS.GLOBAL_WINDOW_RESIZE.subscribe(
       (ev: UIEvent) => {
+        this.DOCUMENT_ACTIONS.scaleCanvasFrameContainer(this.activePodDocument?.getZoomScale());
         this.DOCUMENT_ACTIONS.onCanvasContainerResize();
+        this.RENDER_ACTIONS.matchCanvasWithCanvasFrameContainer();
+        this.RENDER_ACTIONS.render();
       }
     );
   }
 
-  onMouseDown_leftClick(){
-    if(this.FEATURE_INFO.getShouldShowContextMenu()) return;
-    if(this.documentState) {
-      switch(this.documentState) {
+  onMouseDown_leftClick() {
+    if (this.FEATURE_INFO.getShouldShowContextMenu()) return;
+    if (this.documentState) {
+      switch (this.documentState) {
         case PodDocumentState.MOVE:
           this.MOVE_ACTIONS.start();
           break;
       }
     } else {
-      switch(this.selectedPodFeature) {
+      switch (this.selectedPodFeature) {
         case PodFeature.ZOOM: this.ZOOM_ACTIONS.start(); break;
-        case PodFeature.BRUSH: 
+        case PodFeature.BRUSH:
 
           this.activePodDocument.getActiveLayer().setAction(
-            this, 
+            this,
             {
-            mousePos: {x: this.GLOBAL_MOUSE_POS.x, y: this.GLOBAL_MOUSE_POS.y},
-            fill: this.FEATURE_INFO.getBrushColor(),
-            utensilSize: this.FEATURE_INFO.getBrushSize()
+              mousePos: { x: this.GLOBAL_MOUSE_POS.x, y: this.GLOBAL_MOUSE_POS.y },
+              fill: this.FEATURE_INFO.getBrushColor(),
+              utensilSize: this.FEATURE_INFO.getBrushSize()
             });
           this.activePodDocument.getActiveLayer().getCurrentAction()?.onDraw(
             this.RENDER_ACTIONS.getDrawCanvas(),
@@ -205,11 +218,19 @@ export class PodDocumentComponent implements OnInit {
           );
           this.RENDER_ACTIONS.setShouldEdit(true);
           break;
+        case PodFeature.FILL:
+          this.activePodDocument.getActiveLayer().setAction(
+            this,
+            {
+              mousePos: { x: this.GLOBAL_MOUSE_POS.x, y: this.GLOBAL_MOUSE_POS.y },
+              fill: this.FEATURE_INFO.getBrushColor()
+            });
+          break;
       }
     }
   }
-  onMouseDown_RightClick(){
-    if(this.documentState) {
+  onMouseDown_RightClick() {
+    if (this.documentState) {
 
     } else {
       this.FEATURE_INFO.setShouldShowContextMenu(true);
@@ -217,7 +238,7 @@ export class PodDocumentComponent implements OnInit {
       this.FEATURE_INFO.setMouseY(this.GLOBAL_MOUSE_POS.y);
     }
   }
-  
+
 
 
   setState(state: PodDocumentState) {
@@ -226,13 +247,13 @@ export class PodDocumentComponent implements OnInit {
     this.stateSubscription.next(this.documentState);
   }
 
-  mouseIsIn(){
+  mouseIsIn() {
     let canvasContainer = this.RENDER_ACTIONS.getCanvasContainer();
     let canvasContainerDimensions = canvasContainer.getBoundingClientRect();
     let currentMousePos = this.GLOBAL_MOUSE_POS;
-    if(currentMousePos.x > canvasContainerDimensions.x && currentMousePos.x < canvasContainerDimensions.x + canvasContainerDimensions.width &&
+    if (currentMousePos.x > canvasContainerDimensions.x && currentMousePos.x < canvasContainerDimensions.x + canvasContainerDimensions.width &&
       currentMousePos.y > canvasContainerDimensions.y && currentMousePos.y < canvasContainerDimensions.y + canvasContainerDimensions.height) {
-        return true;
+      return true;
     }
     return false;
   }
@@ -245,26 +266,26 @@ export class MouseActions {
   protected shouldActivate = false;
   protected podDocComp: PodDocumentComponent;
 
-  constructor(podDocComp: PodDocumentComponent){
+  constructor(podDocComp: PodDocumentComponent) {
     this.podDocComp = podDocComp;
   }
 
-  public start(){
-    this.startingMousePos = {x: this.podDocComp.GLOBAL_MOUSE_POS.x, y: this.podDocComp.GLOBAL_MOUSE_POS.y};
+  public start() {
+    this.startingMousePos = { x: this.podDocComp.GLOBAL_MOUSE_POS.x, y: this.podDocComp.GLOBAL_MOUSE_POS.y };
     this.shouldActivate = true;
   }
 
-  public isReady(){
+  public isReady() {
     return this.startingMousePos && this.shouldActivate && this.podDocComp.activePodDocument
   }
 }
 export class MoveActions extends MouseActions {
-  private documentStartPosition: Vector2D = {x: 0, y: 0};
-  private documentStartDimensions: Vector2D = {x: 0, y: 0};
-  private worldStartPosition: Vector2D = {x: 0, y: 0};
+  private documentStartPosition: Vector2D = { x: 0, y: 0 };
+  private documentStartDimensions: Vector2D = { x: 0, y: 0 };
+  private worldStartPosition: Vector2D = { x: 0, y: 0 };
   private moveWorldX = false;
   private moveWorldY = false;
-  start(){
+  start() {
     super.start();
     let canvasFrameContainer = this.podDocComp.RENDER_ACTIONS.getCanvasFrameContainer();
     let canvasFrameContainerDimensions = canvasFrameContainer.getBoundingClientRect();
@@ -284,31 +305,29 @@ export class MoveActions extends MouseActions {
     this.startingMousePos.y = this.podDocComp.GLOBAL_MOUSE_POS.y;
   }
 
-  onMouseMove(){
-    if(!this.isReady()) return;
+  onMouseMove() {
+    if (!this.isReady()) return;
     let canvasFrameContainer = this.podDocComp.RENDER_ACTIONS.getCanvasFrameContainer();
     let canvasFrameContainerDimensions = canvasFrameContainer.getBoundingClientRect();
     let canvasContainer = this.podDocComp.RENDER_ACTIONS.getCanvasContainer();
     let canvasContainerDimensions = canvasContainer.getBoundingClientRect();
     let mouseXDistance = (this.podDocComp.GLOBAL_MOUSE_POS.x - this.startingMousePos.x);
     let mouseYDistance = (this.podDocComp.GLOBAL_MOUSE_POS.y - this.startingMousePos.y);
-    if(this.moveWorldX) {
+    if (this.moveWorldX) {
       let newWorldX = this.worldStartPosition.x + mouseXDistance;
-      //console.log("WORLD " + newWorldX + ", " + mouseXDistance);
-      if(newWorldX > 0) {
+      if (newWorldX > 0) {
         newWorldX = 0;
         this.startingMousePos.x = this.podDocComp.GLOBAL_MOUSE_POS.x;
         this.moveWorldX = false;
       }
       this.podDocComp.activePodDocument.setWorldXPosition(newWorldX);
       let newCanvasFrameContainerWidth = this.documentStartDimensions.x + this.podDocComp.activePodDocument.getWorldPosition().x;
-      newCanvasFrameContainerWidth = newCanvasFrameContainerWidth > canvasContainerDimensions.width? canvasContainerDimensions.width: newCanvasFrameContainerWidth;
+      newCanvasFrameContainerWidth = newCanvasFrameContainerWidth > canvasContainerDimensions.width ? canvasContainerDimensions.width : newCanvasFrameContainerWidth;
       canvasFrameContainer.style.width = `${newCanvasFrameContainerWidth}px`;
-      
+
     } else {
       let newCanvasFrameX = this.documentStartPosition.x + mouseXDistance;
-      //console.log("FRAME " + newCanvasFrameX + ", " + mouseXDistance);
-      if(newCanvasFrameX < 0) {
+      if (newCanvasFrameX < 0) {
         newCanvasFrameX = 0;
         this.startingMousePos.x = this.podDocComp.GLOBAL_MOUSE_POS.x;
         this.documentStartPosition.x = newCanvasFrameX;
@@ -318,23 +337,21 @@ export class MoveActions extends MouseActions {
     }
 
 
-    if(this.moveWorldY) {
+    if (this.moveWorldY) {
       let newWorldY = this.worldStartPosition.y + mouseYDistance;
-      //console.log("WORLD " + newWorldX + ", " + mouseXDistance);
-      if(newWorldY > 0) {
+      if (newWorldY > 0) {
         newWorldY = 0;
         this.startingMousePos.y = this.podDocComp.GLOBAL_MOUSE_POS.y;
         this.moveWorldY = false;
       }
       this.podDocComp.activePodDocument.setWorldYPosition(newWorldY);
       let newCanvasFrameContainerHeight = this.documentStartDimensions.y + this.podDocComp.activePodDocument.getWorldPosition().y;
-      newCanvasFrameContainerHeight = newCanvasFrameContainerHeight > canvasContainerDimensions.height? canvasContainerDimensions.height: newCanvasFrameContainerHeight;
+      newCanvasFrameContainerHeight = newCanvasFrameContainerHeight > canvasContainerDimensions.height ? canvasContainerDimensions.height : newCanvasFrameContainerHeight;
       canvasFrameContainer.style.height = `${newCanvasFrameContainerHeight}px`;
-      
+
     } else {
       let newCanvasFrameY = this.documentStartPosition.y + mouseYDistance;
-      //console.log("FRAME " + newCanvasFrameX + ", " + mouseXDistance);
-      if(newCanvasFrameY < 0) {
+      if (newCanvasFrameY < 0) {
         newCanvasFrameY = 0;
         this.startingMousePos.y = this.podDocComp.GLOBAL_MOUSE_POS.y;
         this.documentStartPosition.y = newCanvasFrameY;
@@ -348,7 +365,7 @@ export class MoveActions extends MouseActions {
     this.podDocComp.RENDER_ACTIONS.render();
   }
 
-  stopMoving(){
+  stopMoving() {
     this.shouldActivate = false;
   }
 }
@@ -358,198 +375,129 @@ export class ZoomActions extends MouseActions {
   podDocComp: PodDocumentComponent;
   startOfZoom: Date;
 
-  start(){
+  start() {
     super.start();
     this.startOfZoom = new Date();
     this.podDocComp.RENDER_ACTIONS.matchCanvasWithCanvasContainer();
     this.podDocComp.RENDER_ACTIONS.render();
   }
 
-  onMouseMove(){
-    
-    if(!this.isReady()) return;
+  onMouseMove() {
+
+    if (!this.isReady()) return;
 
     let currentMousePos = this.podDocComp.GLOBAL_MOUSE_POS;
     let zoomScale = this.podDocComp.activePodDocument.getZoomScale();
     let zoomVal = 0.005;
     let zoomOffset = Math.abs(this.startingMousePos.x - currentMousePos.x);
-    if(this.podDocComp.mouseUtilities.isGoingLeft(this.startingMousePos, currentMousePos)) {
+    if (this.podDocComp.mouseUtilities.isGoingLeft(this.startingMousePos, currentMousePos)) {
       zoomScale = zoomScale - zoomVal * zoomOffset;
     } else {
       zoomScale = zoomScale + zoomVal * zoomOffset;
     }
-    
+
     this.podDocComp.DOCUMENT_ACTIONS.scaleCanvasFrameContainer(zoomScale);
     this.podDocComp.DOCUMENT_ACTIONS.onCanvasContainerResize();
-    this.startingMousePos = {x: currentMousePos.x, y: currentMousePos.y};
+    this.startingMousePos = { x: currentMousePos.x, y: currentMousePos.y };
 
-  
+
     let nowTime = new Date();
     let elapsed = nowTime.getTime() - this.startOfZoom.getTime();
-    if(elapsed > 5) {
+    if (elapsed > 5) {
       this.startOfZoom = nowTime;
       this.podDocComp.RENDER_ACTIONS.render();
     }
 
   }
 
-  stopZooming(){
+  stopZooming() {
     this.shouldActivate = false;
-    //this.podDocComp.RENDER_ACTIONS.matchCanvasWithCanvasFrameContainer();
   }
 }
 
 export class PodDocumentActions {
 
   podDocComp: PodDocumentComponent;
-  constructor(podDocComp: PodDocumentComponent){
+  constructor(podDocComp: PodDocumentComponent) {
     this.podDocComp = podDocComp;
   }
 
-  setupDocument(){
+  setupDocument() {
     this.scaleCanvasFrameContainer();
     this.onCanvasContainerResize();
     this.podDocComp.RENDER_ACTIONS.matchCanvasWithCanvasFrameContainer();
     this.podDocComp.RENDER_ACTIONS.render();
-    if(this.podDocComp.activePodDocument.getLayers().length <= 0) {
+    if (this.podDocComp.activePodDocument.getLayers().length <= 0) {
       let firstLayer = this.podDocComp.activePodDocument.addLayer(0);
+
       this.podDocComp.activeLayerSubscription.next(firstLayer);
     }
-    
   }
   scaleCanvasFrameContainer(customScale?: number) {
     let activeDocument = this.podDocComp.activePodDocument;
-    if(!activeDocument) return;
+    if (!activeDocument) return;
     let documentWidth = activeDocument.getWidth();
     let documentHeight = activeDocument.getHeight();
     let containerWidth = this.podDocComp.RENDER_ACTIONS.getCanvasContainerWidth();
     let containerHeight = this.podDocComp.RENDER_ACTIONS.getCanvasContainerHeight();
     let canvasFrameContainer = this.podDocComp.RENDER_ACTIONS.getCanvasFrameContainer();
-    let scale = customScale != null? customScale: 1;
-    if(customScale == null) {
-      if(documentWidth > documentHeight) {
+    let scale = customScale != null ? customScale : 1;
+    if (customScale == null) {
+      if (documentWidth > documentHeight) {
         scale = containerWidth / documentWidth;
       } else {
         scale = containerHeight / documentHeight;
       }
-      scale = scale > 1? 1: scale - (scale * 0.1);
+      scale = scale > 1 ? 1 : scale - (scale * 0.1);
     }
-    scale = scale < 0.01? 0.01: scale;
-    scale = scale > 10? 10: scale;
+    scale = scale < 0.01 ? 0.01 : scale;
+    scale = scale > 10 ? 10 : scale;
 
     let scaledDocumentWidth = (documentWidth * scale);
     let scaledDocumentHeight = (documentHeight * scale);
     let worldPos = activeDocument.getWorldPosition();
     let newCanvasFrameWidth = scaledDocumentWidth + worldPos.x;
-    newCanvasFrameWidth = newCanvasFrameWidth < 0? 0: newCanvasFrameWidth;
-    newCanvasFrameWidth = newCanvasFrameWidth > containerWidth? containerWidth: newCanvasFrameWidth;
+    newCanvasFrameWidth = newCanvasFrameWidth < 0 ? 0 : newCanvasFrameWidth;
+    newCanvasFrameWidth = newCanvasFrameWidth > containerWidth ? containerWidth : newCanvasFrameWidth;
     let newCanvasFrameHeight = scaledDocumentHeight + worldPos.y;
-    newCanvasFrameHeight = newCanvasFrameHeight < 0? 0: newCanvasFrameHeight;
-    newCanvasFrameHeight = newCanvasFrameHeight > containerHeight? containerHeight: newCanvasFrameHeight;
+    newCanvasFrameHeight = newCanvasFrameHeight < 0 ? 0 : newCanvasFrameHeight;
+    newCanvasFrameHeight = newCanvasFrameHeight > containerHeight ? containerHeight : newCanvasFrameHeight;
     activeDocument.setZoomScale(scale);
     activeDocument.setInitialZoomScale(scale);
     canvasFrameContainer.style.width = `${newCanvasFrameWidth}px`;
     canvasFrameContainer.style.height = `${newCanvasFrameHeight}px`;
   }
-  onCanvasContainerResize(){
-    if(!this.podDocComp.activePodDocument) return;
+  onCanvasContainerResize() {
+    if (!this.podDocComp.activePodDocument) return;
     let canvasContainerWidth = this.podDocComp.RENDER_ACTIONS.getCanvasContainerWidth();
-    let canvasContainerHeight= this.podDocComp.RENDER_ACTIONS.getCanvasContainerHeight();
+    let canvasContainerHeight = this.podDocComp.RENDER_ACTIONS.getCanvasContainerHeight();
     let canvasFrameContainerWidth = this.podDocComp.RENDER_ACTIONS.getCanvasFrameContainerWidth();
     let canvasFrameContainerHeight = this.podDocComp.RENDER_ACTIONS.getCanvasFrameContainerHeight();
-    let canvasFrameContainer = this.podDocComp.RENDER_ACTIONS.getCanvasFrameContainer();
     let documentWidth = this.podDocComp.activePodDocument.getWidth() * this.podDocComp.activePodDocument.getZoomScale();
     let documentHeight = this.podDocComp.activePodDocument.getHeight() * this.podDocComp.activePodDocument.getZoomScale();
-    if(canvasContainerWidth > documentWidth && canvasFrameContainerWidth < canvasContainerWidth) {
+    if ((canvasContainerWidth > documentWidth && canvasFrameContainerWidth < canvasContainerWidth) ||
+      (canvasContainerHeight > documentHeight && canvasFrameContainerHeight < canvasContainerHeight)) {
       this.podDocComp.activePodDocument.setWorldXPosition(0);
       this.centerCanvasFrameHorizontallyInCanvasContainer();
-    } 
-
-    if(canvasContainerHeight > documentHeight && canvasFrameContainerHeight < canvasContainerHeight) {
       this.podDocComp.activePodDocument.setWorldYPosition(0);
       this.centerCanvasFrameVerticallInCanvasContainer();
     }
-    
   }
 
-  /*scaleCanvasFrameContainer(customScale?: number){
-    let activeDocument = this.podDocComp.activePodDocument;
-    if(!activeDocument) return;
-
-    let documentWidth = activeDocument.getWidth();
-    let documentHeight = activeDocument.getHeight();
-    let containerWidth = this.podDocComp.RENDER_ACTIONS.getCanvasContainerWidth();
-    let containerHeight = this.podDocComp.RENDER_ACTIONS.getCanvasContainerHeight();
-    let scale = customScale != null? customScale: 1;
-    if(customScale == null) {
-      if(documentWidth > documentHeight) {
-        scale = containerWidth / documentWidth;
-      } else {
-        scale = containerHeight / documentHeight;
-      }
-      scale = scale > 1? 1: scale - (scale * 0.1);
-    }
-    scale = scale < 0.01? 0.01: scale;
-    scale = scale > 10? 10: scale;
-    activeDocument.setZoomScale(scale);
-    activeDocument.setInitialZoomScale(scale);
-    let canvasFrameContainer = this.podDocComp.RENDER_ACTIONS.getCanvasFrameContainer();
-    let scaledDocumentWidth = (documentWidth * scale);
-    let scaledDocumentHeight = (documentHeight * scale);
-    if(scaledDocumentWidth > containerWidth) {
-      scaledDocumentWidth = containerWidth;
-    } 
-    if(scaledDocumentHeight > containerHeight) {
-      scaledDocumentHeight = containerHeight;
-    } 
-    canvasFrameContainer.style.width = `${scaledDocumentWidth}px`;
-    canvasFrameContainer.style.height = `${scaledDocumentHeight}px`;
-  }
-
-  onCanvasContainerResize(){
-    if(!this.podDocComp.activePodDocument) return;
-    let canvasContainerWidth = this.podDocComp.RENDER_ACTIONS.getCanvasContainerWidth();
-    let canvasContainerHeight= this.podDocComp.RENDER_ACTIONS.getCanvasContainerHeight();
-    let canvasFrameContainerWidth = this.podDocComp.RENDER_ACTIONS.getCanvasFrameContainerWidth();
+  centerCanvasFrameVerticallInCanvasContainer() {
+    let canvasContainerHeight = this.podDocComp.RENDER_ACTIONS.getCanvasContainerHeight();
     let canvasFrameContainerHeight = this.podDocComp.RENDER_ACTIONS.getCanvasFrameContainerHeight();
-    let canvasFrameContainer = this.podDocComp.RENDER_ACTIONS.getCanvasFrameContainer();
-    let documentWidth = this.podDocComp.activePodDocument.getWidth() * this.podDocComp.activePodDocument.getZoomScale();
-    let documentHeight = this.podDocComp.activePodDocument.getHeight() * this.podDocComp.activePodDocument.getZoomScale();
-    
-    if(canvasContainerWidth > documentWidth && canvasFrameContainerWidth < canvasContainerWidth) {
-      this.podDocComp.activePodDocument.setWorldXPosition(0);
-      this.centerCanvasFrameHorizontallyInCanvasContainer();
-      canvasFrameContainer.style.width = `${documentWidth}px`;
-    } else {
-      canvasFrameContainer.style.left = `${0}px`;
-      canvasFrameContainer.style.width = `${canvasContainerWidth}px`;
-    }
-
-    if(canvasContainerHeight > documentHeight && canvasFrameContainerHeight < canvasContainerHeight) {
-      this.podDocComp.activePodDocument.setWorldYPosition(0);
-      this.centerCanvasFrameVerticallInCanvasContainer();
-      canvasFrameContainer.style.height = `${documentHeight}px`;
-    }else {
-      canvasFrameContainer.style.top = `${0}px`;
-      canvasFrameContainer.style.height = `${canvasContainerHeight}px`;
-    }
-    
-  }*/
-
-  centerCanvasFrameVerticallInCanvasContainer(){
-    let canvasContainerHeight= this.podDocComp.RENDER_ACTIONS.getCanvasContainerHeight();
-    let canvasFrameContainerHeight= this.podDocComp.RENDER_ACTIONS.getCanvasFrameContainerHeight();
     let canvasFrameContainer = this.podDocComp.RENDER_ACTIONS.getCanvasFrameContainer();
     let top = (canvasContainerHeight / 2) - (canvasFrameContainerHeight / 2);
-    top = top < 0? 0: top;
+    top = top < 0 ? 0 : top;
     canvasFrameContainer.style.top = `${top}px`;
   }
-  centerCanvasFrameHorizontallyInCanvasContainer(){
+  centerCanvasFrameHorizontallyInCanvasContainer() {
     let canvasContainerWidth = this.podDocComp.RENDER_ACTIONS.getCanvasContainerWidth();
     let canvasFrameContainerWidth = this.podDocComp.RENDER_ACTIONS.getCanvasFrameContainerWidth();
     let canvasFrameContainer = this.podDocComp.RENDER_ACTIONS.getCanvasFrameContainer();
     let left = (canvasContainerWidth / 2) - (canvasFrameContainerWidth / 2);
-    left = left <0? 0: left;
+    left = left < 0 ? 0 : left;
     canvasFrameContainer.style.left = `${left}px`;
   }
 }
@@ -558,14 +506,14 @@ export class PodDocumentActions {
 export class RenderActions {
   podDocComp: PodDocumentComponent;
   private shouldEdit = false;
-  constructor(podDocComp: PodDocumentComponent){
+  constructor(podDocComp: PodDocumentComponent) {
     this.podDocComp = podDocComp;
   }
 
-  render(){
+  render() {
 
     let activeDocument = this.podDocComp.activePodDocument;
-    if(!activeDocument) return;
+    if (!activeDocument) return;
 
     this.clearCanvas(this.getBottomCanvas());
     this.clearCanvas(this.getDrawCanvas());
@@ -573,21 +521,21 @@ export class RenderActions {
 
 
     let bottomLayer = true;
-    for(let i = activeDocument.getLayers().length - 1; i >= 0; i--) {
+    for (let i = activeDocument.getLayers().length - 1; i >= 0; i--) {
       let currentLayer = activeDocument.getLayers()[i];
-      
-      if(currentLayer == activeDocument.getActiveLayer()) { // Draw on current layer
-        for(let action of currentLayer.actions) {
+
+      if (currentLayer == activeDocument.getActiveLayer()) { // Draw on current layer
+        for (let action of currentLayer.actions) {
           action.render(this.getDrawCanvas(), this.podDocComp.activePodDocument);
         }
         bottomLayer = false;
 
-      } else if(bottomLayer) { // Draw on Bottom Layer
-        for(let action of currentLayer.actions) {
+      } else if (bottomLayer) { // Draw on Bottom Layer
+        for (let action of currentLayer.actions) {
           action.render(this.getBottomCanvas(), this.podDocComp.activePodDocument);
         }
       } else { // Draw on Top Layer
-        for(let action of currentLayer.actions) {
+        for (let action of currentLayer.actions) {
           action.render(this.getTopCanvas(), this.podDocComp.activePodDocument);
         }
       }
@@ -599,48 +547,48 @@ export class RenderActions {
   getCanvasContainer() {
     return <HTMLDivElement>document.querySelector(".pod-document-content-canvas-container");
   }
-  getCanvasFrameContainer(){
+  getCanvasFrameContainer() {
     return <HTMLDivElement>document.querySelector(".canvas-frame-container");
   }
-  getBottomCanvas(){
+  getBottomCanvas() {
     return <HTMLCanvasElement>document.querySelector(".bottom-canvas");
   }
-  getDrawCanvas(){
+  getDrawCanvas() {
     return <HTMLCanvasElement>document.querySelector(".draw-canvas");
   }
-  getTopCanvas(){ 
+  getTopCanvas() {
     return <HTMLCanvasElement>document.querySelector(".top-canvas");
   }
 
-  getCanvasContainerWidth(){
+  getCanvasContainerWidth() {
     return this.getCanvasContainer()!.getBoundingClientRect().width;
   }
-  getCanvasContainerHeight(){
+  getCanvasContainerHeight() {
     return this.getCanvasContainer()!.getBoundingClientRect().height;
   }
 
-  getCanvasFrameContainerWidth(){
+  getCanvasFrameContainerWidth() {
     return this.getCanvasFrameContainer().getBoundingClientRect().width;
   }
-  getCanvasFrameContainerHeight(){
+  getCanvasFrameContainerHeight() {
     return this.getCanvasFrameContainer().getBoundingClientRect().height;
   }
 
-  setShouldEdit(shouldEdit: boolean){
+  setShouldEdit(shouldEdit: boolean) {
     this.shouldEdit = shouldEdit;
   }
 
-  getShouldEdit(){
+  getShouldEdit() {
     return this.shouldEdit;
   }
 
-  clearCanvas(canvas: HTMLCanvasElement){
+  clearCanvas(canvas: HTMLCanvasElement) {
     let canvasDimensions = canvas.getBoundingClientRect();
     let utensil = canvas.getContext("2d");
     utensil.clearRect(0, 0, canvasDimensions.width, canvasDimensions.height);
   }
 
-  matchCanvasWithCanvasFrameContainer(){
+  matchCanvasWithCanvasFrameContainer() {
     let bottomCanvas = this.getBottomCanvas();
     let drawCanvas = this.getDrawCanvas();
     let topCanvas = this.getTopCanvas();
@@ -649,7 +597,7 @@ export class RenderActions {
     bottomCanvas.height = drawCanvas.height = topCanvas.height = this.getCanvasFrameContainerHeight();
   }
 
-  matchCanvasWithCanvasContainer(){
+  matchCanvasWithCanvasContainer() {
     let bottomCanvas = this.getBottomCanvas();
     let drawCanvas = this.getDrawCanvas();
     let topCanvas = this.getTopCanvas();
@@ -663,13 +611,13 @@ export class RenderActions {
 
 export class CursorActions {
   podDocComp: PodDocumentComponent;
-  constructor(podDocComp: PodDocumentComponent){
+  constructor(podDocComp: PodDocumentComponent) {
     this.podDocComp = podDocComp;
   }
 
   private changeCursor(documentState: PodDocumentState, feature: PodFeature) {
-    if(documentState) {
-      switch(documentState) {
+    if (documentState) {
+      switch (documentState) {
         case PodDocumentState.MOVE: this.genMoveDocumentCursor(); break;
       }
     } else {
@@ -678,18 +626,19 @@ export class CursorActions {
         case PodFeature.BRUSH: this.genRoundCusor(); break;
         case PodFeature.ERASER: this.genRoundCusor(); break;
         case PodFeature.ZOOM: this.genZoomFeatureCursor(); break;
+        case PodFeature.FILL: this.genFillFeatureCursor(); break;
       }
     }
-    
+
   }
 
-  onMouseMove(documentState: PodDocumentState, feature: PodFeature, mousePos: Vector2D){
+  onMouseMove(documentState: PodDocumentState, feature: PodFeature, mousePos: Vector2D) {
     this.changeCursor(documentState, feature);
     switch (this.podDocComp.selectedPodFeature) {
       case PodFeature.BRUSH: this.moveRoundCursor(mousePos); break;
       case PodFeature.ERASER: this.moveRoundCursor(mousePos); break;
     }
-    if(this.podDocComp.documentState == PodDocumentState.MOVE) this.hideCursor();
+    if (this.podDocComp.documentState == PodDocumentState.MOVE) this.hideCursor();
   }
   private moveRoundCursor(mousePos: Vector2D) {
     if (this.podDocComp.selectedPodFeature == null) return;
@@ -697,7 +646,7 @@ export class CursorActions {
     this.showCursor();
     let canvasContainer = this.podDocComp.RENDER_ACTIONS.getCanvasContainer();
     let circumference = this.getCurrentFeatureValue(
-      this.podDocComp.FEATURE_INFO, 
+      this.podDocComp.FEATURE_INFO,
       this.podDocComp.selectedPodFeature) * this.podDocComp.activePodDocument.getZoomScale();
     podCursor.style.left = `${this.centerPodCursorToMouseX(mousePos, canvasContainer, circumference)}px`;
     podCursor.style.top = `${this.centerPodCursorToMouseY(mousePos, canvasContainer, circumference)}px`;
@@ -740,17 +689,22 @@ export class CursorActions {
     podCursor.style.visibility = "hidden";
   }
 
-  private genMoveFeatureCursor(){
+  private genMoveFeatureCursor() {
     this.resetPodCursor();
     let canvasContainer = this.podDocComp.RENDER_ACTIONS.getCanvasContainer();
     canvasContainer.style.cursor = "context-menu";
   }
-  private genZoomFeatureCursor(){
+  private genZoomFeatureCursor() {
     this.resetPodCursor();
     let canvasContainer = this.podDocComp.RENDER_ACTIONS.getCanvasContainer();
-    canvasContainer.style.cursor = "zoom-in";
+    canvasContainer.style.cursor = `url('../../../assets/icons/zoom_cursor.png'), pointer`;
   }
-  private genMoveDocumentCursor(){
+  private genFillFeatureCursor() {
+    this.resetPodCursor();
+    let canvasContainer = this.podDocComp.RENDER_ACTIONS.getCanvasContainer();
+    canvasContainer.style.cursor = `url('../../../assets/icons/fill_cursor.png'), pointer`;
+  }
+  private genMoveDocumentCursor() {
     this.resetPodCursor();
     let canvasContainer = this.podDocComp.RENDER_ACTIONS.getCanvasContainer();
     canvasContainer.style.cursor = "grab";

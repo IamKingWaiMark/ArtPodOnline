@@ -3,5 +3,6 @@ export enum PodFeature {
     BRUSH = "BRUSH",
     ERASER = "#00000000",
     ZOOM = "ZOOM",
-    FILL = "FILL"
+    FILL = "FILL",
+    SHAPE = "SHAPE"
   }
