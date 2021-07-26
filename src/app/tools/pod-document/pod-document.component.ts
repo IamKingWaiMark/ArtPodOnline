@@ -32,7 +32,7 @@ export class PodDocumentComponent implements OnInit {
 
   CURSOR_ACTIONS: CursorActions = null;
   DOCUMENT_ACTIONS: PodDocumentActions = null;
-  SAVE_ACTIONS: PodDocumentSaveActions = null;
+  SAVE_ACTIONS: SaveActions = null;
   ZOOM_ACTIONS: ZoomActions = null;
   MOVE_ACTIONS: MoveActions = null;
   RENDER_ACTIONS: RenderActions = null;
@@ -53,14 +53,14 @@ export class PodDocumentComponent implements OnInit {
       this.RENDER_ACTIONS = new RenderActions(this);
       this.DOCUMENT_ACTIONS = new PodDocumentActions(this);
       this.CURSOR_ACTIONS = new CursorActions(this);
-      this.SAVE_ACTIONS = new PodDocumentSaveActions();
+      this.SAVE_ACTIONS = new SaveActions();
 
-      this.subscribeToActiveLayer();
+
       this.subscribeToDocumentStates();
       this.subscribeToPodFeatures();
       this.subscribeToGlobalEvents();
       this.subscribeToActivePodDocument();
-
+      this.subscribeToActiveLayer();
     }
   }
 
@@ -68,7 +68,7 @@ export class PodDocumentComponent implements OnInit {
     this.activeLayerSubscription.subscribe(
       layer => {
         this.activePodDocument?.setActiveLayer(layer);
-        this.RENDER_ACTIONS.render();
+        this.RENDER_ACTIONS.render(true);
       }
     );
   }
@@ -105,17 +105,18 @@ export class PodDocumentComponent implements OnInit {
 
         switch (hotKey) {
           case HotKey.SAVE_AS:
+            //this.SAVE_ACTIONS.___SAVE_DOCUMENT();
             break;
           case HotKey.MOVE_POD_DCOUMENT:
             this.setState(PodDocumentState.MOVE);
             break;
           case HotKey.UNDO:
             this.activePodDocument?.undo();
-            this.RENDER_ACTIONS.render();
+            this.RENDER_ACTIONS.render(true);
             break;
           case HotKey.REDO:
             this.activePodDocument?.redo();
-            this.RENDER_ACTIONS.render();
+            this.RENDER_ACTIONS.render(true);
             break;
         }
 
@@ -132,7 +133,7 @@ export class PodDocumentComponent implements OnInit {
         this.ZOOM_ACTIONS.stopZooming();
         this.MOVE_ACTIONS.stopMoving();
         this.RENDER_ACTIONS.setShouldEdit(false);
-        this.RENDER_ACTIONS.render();
+        this.RENDER_ACTIONS.render(false);
       }
     );
     this.GLOBAL_EVENTS.GLOBAL_MOUSE_DOWN_EVENT.subscribe(
@@ -186,7 +187,7 @@ export class PodDocumentComponent implements OnInit {
         this.DOCUMENT_ACTIONS.scaleCanvasFrameContainer(this.activePodDocument?.getZoomScale());
         this.DOCUMENT_ACTIONS.onCanvasContainerResize();
         this.RENDER_ACTIONS.matchCanvasWithCanvasFrameContainer();
-        this.RENDER_ACTIONS.render();
+        this.RENDER_ACTIONS.render(true);
       }
     );
   }
@@ -285,8 +286,10 @@ export class MoveActions extends MouseActions {
   private worldStartPosition: Vector2D = { x: 0, y: 0 };
   private moveWorldX = false;
   private moveWorldY = false;
+  private startOfZoom: Date;
   start() {
     super.start();
+    this.startOfZoom = new Date();
     let canvasFrameContainer = this.podDocComp.RENDER_ACTIONS.getCanvasFrameContainer();
     let canvasFrameContainerDimensions = canvasFrameContainer.getBoundingClientRect();
     let canvasContainer = this.podDocComp.RENDER_ACTIONS.getCanvasContainer();
@@ -361,8 +364,14 @@ export class MoveActions extends MouseActions {
     }
 
 
-    this.podDocComp.RENDER_ACTIONS.matchCanvasWithCanvasFrameContainer();
-    this.podDocComp.RENDER_ACTIONS.render();
+    let nowTime = new Date();
+    let elapsed = nowTime.getTime() - this.startOfZoom.getTime();
+    if (elapsed > 5) {
+      this.startOfZoom = nowTime;
+      this.podDocComp.RENDER_ACTIONS.matchCanvasWithCanvasFrameContainer();
+      this.podDocComp.RENDER_ACTIONS.render(true);
+    }
+
   }
 
   stopMoving() {
@@ -379,7 +388,7 @@ export class ZoomActions extends MouseActions {
     super.start();
     this.startOfZoom = new Date();
     this.podDocComp.RENDER_ACTIONS.matchCanvasWithCanvasContainer();
-    this.podDocComp.RENDER_ACTIONS.render();
+    this.podDocComp.RENDER_ACTIONS.render(true);
   }
 
   onMouseMove() {
@@ -403,9 +412,9 @@ export class ZoomActions extends MouseActions {
 
     let nowTime = new Date();
     let elapsed = nowTime.getTime() - this.startOfZoom.getTime();
-    if (elapsed > 10) {
+    if (elapsed > 5) {
       this.startOfZoom = nowTime;
-      this.podDocComp.RENDER_ACTIONS.render();
+      this.podDocComp.RENDER_ACTIONS.render(true);
     }
 
   }
@@ -426,10 +435,9 @@ export class PodDocumentActions {
     this.scaleCanvasFrameContainer();
     this.onCanvasContainerResize();
     this.podDocComp.RENDER_ACTIONS.matchCanvasWithCanvasFrameContainer();
-    this.podDocComp.RENDER_ACTIONS.render();
+    this.podDocComp.RENDER_ACTIONS.render(true);
     if (this.podDocComp.activePodDocument.getLayers().length <= 0) {
       let firstLayer = this.podDocComp.activePodDocument.addLayer(0);
-
       this.podDocComp.activeLayerSubscription.next(firstLayer);
     }
   }
@@ -510,38 +518,50 @@ export class RenderActions {
     this.podDocComp = podDocComp;
   }
 
-  render() {
+  render(all?: boolean) {
 
     let activeDocument = this.podDocComp.activePodDocument;
     if (!activeDocument) return;
-
-    this.clearCanvas(this.getBottomCanvas());
-    this.clearCanvas(this.getDrawCanvas());
-    this.clearCanvas(this.getTopCanvas());
-
-
-    let bottomLayer = true;
-    for (let i = activeDocument.getLayers().length - 1; i >= 0; i--) {
-      let currentLayer = activeDocument.getLayers()[i];
-
-      if (currentLayer == activeDocument.getActiveLayer()) { // Draw on current layer
-        for (let action of currentLayer.actions) {
-          action.render(this.getDrawCanvas(), this.podDocComp.activePodDocument);
-        }
-        currentLayer.setDataUrl(this.getDrawCanvas());
-        bottomLayer = false;
-      } else if (bottomLayer) { // Draw on Bottom Layer
-        for (let action of currentLayer.actions) {
-          action.render(this.getBottomCanvas(), this.podDocComp.activePodDocument);
-        }
-      } else { // Draw on Top Layer
-        for (let action of currentLayer.actions) {
-          action.render(this.getTopCanvas(), this.podDocComp.activePodDocument);
-        }
-      }
-
-      
+    if(all) {
+      this.clearCanvas(this.getBottomCanvas());
+      this.clearCanvas(this.getDrawCanvas());
+      this.clearCanvas(this.getTopCanvas());
+    } else {
+      this.clearCanvas(this.getDrawCanvas());
     }
+
+
+    if(all) {
+      let bottomLayer = true;
+      for (let i = activeDocument.getLayers().length - 1; i >= 0; i--) {
+        let currentLayer = activeDocument.getLayers()[i];
+        if(!currentLayer.visible) continue;
+        if (currentLayer == activeDocument.getActiveLayer()) { // Draw on current layer
+          for (let action of currentLayer.actions) {
+            action.render(this.getDrawCanvas(), activeDocument);
+          }
+          bottomLayer = false;
+        } else if (bottomLayer) { // Draw on Bottom Layer
+          for (let action of currentLayer.actions) {
+            action.render(this.getBottomCanvas(), activeDocument);
+          }
+        } else { // Draw on Top Layer
+          for (let action of currentLayer.actions) {
+            action.render(this.getTopCanvas(), activeDocument);
+          }
+        }
+  
+        
+      }
+    } else {
+      let currentLayer = activeDocument.getActiveLayer();
+      if(!currentLayer.visible) return;
+      for (let action of currentLayer.actions) {
+        action.render(this.getDrawCanvas(), activeDocument);
+      }
+      currentLayer.setDataUrl(this.getDrawCanvas());
+    }
+   
 
 
   }
@@ -723,9 +743,9 @@ export class CursorActions {
 
 
 
-export class PodDocumentSaveActions {
+export class SaveActions {
   ___SAVE_DOCUMENT() {
-    let canvas = <HTMLCanvasElement>document.querySelector(".test-canvas");
+    let canvas = <HTMLCanvasElement>document.querySelector(".draw-canvas");
     var link = document.createElement('a');
     link.download = 'filename.png';
     link.href = canvas.toDataURL();
