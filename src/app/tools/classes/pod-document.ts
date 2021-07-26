@@ -9,6 +9,7 @@ import { Vector2D } from "./vectors";
 export class PodDocument {
 
     private readonly MAX_UNDOS = 50;
+    private readonly MAX_LAYERS = 30;
     private metaData: PodDocMetaData;
     private layers: Layer[] = [];
     private layerCounter = 1;
@@ -25,6 +26,7 @@ export class PodDocument {
     }
 
     addLayer(index: number) {
+        if(this.layers.length >= this.MAX_LAYERS) return null;
         let layer = new Layer(`Layer ${this.layerCounter++}`);
         this.layers.splice(index, 0, layer);
         return layer;
@@ -119,7 +121,8 @@ export class PodDocument {
     }
 
     getActiveLayerIndex(){
-        return this.getLayers().indexOf(this.activeLayer);
+        let index = this.getLayers().indexOf(this.activeLayer);
+        return index? index: 0;
     }
 
 }
@@ -151,6 +154,10 @@ export class Layer {
         let action: LayerAction;
         switch(this.podDocComp.selectedPodFeature) {
             case PodFeature.BRUSH: 
+                if(!podDocComp.activePodDocument.getActiveLayer().visible) {
+                    alert("Cannot draw on hidden layer");
+                    return;
+                }
                 action = new BrushAction(this, data);
                 this.actions.push(action);
                 break;

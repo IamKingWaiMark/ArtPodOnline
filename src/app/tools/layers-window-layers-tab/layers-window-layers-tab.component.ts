@@ -1,5 +1,5 @@
 import { isPlatformBrowser } from '@angular/common';
-import { Component, Inject, Input, OnInit, PLATFORM_ID } from '@angular/core';
+import { Component, HostListener, Inject, Input, OnInit, PLATFORM_ID } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { Layer, PodDocument } from '../classes/pod-document';
 
@@ -12,23 +12,17 @@ export class LayersWindowLayersTabComponent implements OnInit {
   @Input() activePodDocumentSubscription: BehaviorSubject<PodDocument>;
   @Input() activeLayerSubscription: BehaviorSubject<Layer>;
   activePodDocument: PodDocument;
-  activeLayerIndex = 0;
+  dragging = false;
   constructor(@Inject(PLATFORM_ID) private platform: Object) { }
 
   ngOnInit(): void {
     if(isPlatformBrowser(this.platform)) {
       this.subscribeToActibePodDocument();
-      this.subscribeToActiveLayer();
+
     }
   }
 
-  subscribeToActiveLayer(){
-    this.activeLayerSubscription.subscribe(
-      activeLayer => {
-        this.activeLayerIndex = this.activePodDocument?.getActiveLayerIndex();
-      }
-    );
-  }
+
 
   subscribeToActibePodDocument(){
     this.activePodDocumentSubscription.subscribe(
@@ -39,35 +33,48 @@ export class LayersWindowLayersTabComponent implements OnInit {
   }
 
   onAddLayerClick(){
-    this.activePodDocument.addLayer(this.activeLayerIndex);
-    this.clampActiveLayerIndex();
-    let activeLayer = this.activePodDocument.getLayers()[this.activeLayerIndex];
+    if(!this.activePodDocument) return;
+    let activeLayerIndex = this.activePodDocument?.getActiveLayerIndex();
+    this.activePodDocument.addLayer(activeLayerIndex);
+    let activeLayer = this.activePodDocument.getLayers()[activeLayerIndex];
     this.activePodDocument.setActiveLayer(activeLayer);
     this.activeLayerSubscription.next(activeLayer);
   }
   
   onDeleteLayerClick(){
-    this.activePodDocument.deleteLayer(this.activeLayerIndex);
-    this.clampActiveLayerIndex();
-    let activeLayer = this.activePodDocument.getLayers()[this.activeLayerIndex];
+    let activeLayerIndex = this.activePodDocument?.getActiveLayerIndex();
+    this.activePodDocument.deleteLayer(activeLayerIndex);
+    activeLayerIndex = this.clampActiveLayerIndex(activeLayerIndex);
+    let activeLayer = this.activePodDocument.getLayers()[activeLayerIndex];
     this.activePodDocument.setActiveLayer(activeLayer);
     this.activeLayerSubscription.next(activeLayer);
   }
 
-  clampActiveLayerIndex(){
+  clampActiveLayerIndex(num: number){
     const MIN_INDEX = 0;
     const MAX_INDEX = this.activePodDocument.getLayers().length - 1;
-    if(this.activeLayerIndex < MIN_INDEX) this.activeLayerIndex = MIN_INDEX;
-    if(this.activeLayerIndex > MAX_INDEX) this.activeLayerIndex = MAX_INDEX;
+    if(num < MIN_INDEX) return MIN_INDEX;
+    if(num > MAX_INDEX) return MAX_INDEX;
+    return num;
   }
 
   isActiveLayer(layer: Layer){
-    return layer == this.activePodDocument.getLayers()[this.activeLayerIndex];
+    return layer == this.activePodDocument.getActiveLayer();
   }
 
-  onLayerClick(layerIndex: number) {
-    this.activeLayerIndex = layerIndex;
-    this.activeLayerSubscription.next(this.activePodDocument.getLayers()[this.activeLayerIndex]);
+  onLayerClick(layer: Layer) {
+
+    this.activeLayerSubscription.next(layer);
   }
+
+  onLayerDragIconClick(){
+
+  }
+  onToggleLayerVisibilityClick(layer: Layer) {
+    layer.toggleVisibility();
+    this.activeLayerSubscription.next(layer);
+  }
+
+
 
 }

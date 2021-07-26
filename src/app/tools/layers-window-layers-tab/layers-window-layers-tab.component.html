@@ -8,19 +8,21 @@
     <div class="layers-tab-layer-section">
         <div class="layers-tab-layer-section-container">
             <div 
-                [ngClass]="{'layer': true, 'active-layer': isActiveLayer(layer)}" 
+                [ngClass]="{'layer': true, 'active-layer': isActiveLayer(layer), 'layer-dragging': dragging}" 
                 *ngFor="let layer of activePodDocument?.getLayers(); index as i;">
 
-                <div class="layer-icon-container" (click)="layer?.toggleVisibility()">
-                    <img [src]="layer?.getVisibilityIconSrc()" width="16" height="16">
+                <div class="layer-icon-container" (click)="onToggleLayerVisibilityClick(layer)">
+                    <img [src]="layer?.getVisibilityIconSrc()" width="16" height="16" draggable="false">
                 </div>
                 <div [ngClass]="{'layer-snapshot-container': true, 'active-layer-snapshot': isActiveLayer(layer)}" >
-                    <img class="layer-snapshot" [src]="layer?.snapshotImageSrc">
+                    <img class="layer-snapshot" [src]="layer?.snapshotImageSrc" draggable="false">
                 </div>
-                <div class="layer-name-container" (click)="onLayerClick(i)">
-                    <input [value]="layer.name"/>
+                <div class="layer-name-container" (click)="onLayerClick(layer)">
+                    <input [value]="layer.name" draggable="false"/>
                 </div>
-                
+                <div class="layer-dragger-container" (click)="onLayerDragIconClick()">
+                    <img src="assets/icons/layer_dragger.png" draggable="false"> 
+                </div>
             </div>
         </div>
     </div>
