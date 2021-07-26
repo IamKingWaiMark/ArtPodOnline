@@ -18,7 +18,16 @@ export class LayersWindowLayersTabComponent implements OnInit {
   ngOnInit(): void {
     if(isPlatformBrowser(this.platform)) {
       this.subscribeToActibePodDocument();
+      this.subscribeToActiveLayer();
     }
+  }
+
+  subscribeToActiveLayer(){
+    this.activeLayerSubscription.subscribe(
+      activeLayer => {
+        this.activeLayerIndex = this.activePodDocument?.getActiveLayerIndex();
+      }
+    );
   }
 
   subscribeToActibePodDocument(){

@@ -528,8 +528,8 @@ export class RenderActions {
         for (let action of currentLayer.actions) {
           action.render(this.getDrawCanvas(), this.podDocComp.activePodDocument);
         }
+        currentLayer.setDataUrl(this.getDrawCanvas());
         bottomLayer = false;
-
       } else if (bottomLayer) { // Draw on Bottom Layer
         for (let action of currentLayer.actions) {
           action.render(this.getBottomCanvas(), this.podDocComp.activePodDocument);
@@ -539,6 +539,8 @@ export class RenderActions {
           action.render(this.getTopCanvas(), this.podDocComp.activePodDocument);
         }
       }
+
+      
     }
 
 

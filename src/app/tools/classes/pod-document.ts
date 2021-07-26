@@ -118,6 +118,10 @@ export class PodDocument {
         if(this.undoActions.length > this.MAX_UNDOS) this.undoActions.splice(0, 1);
     }
 
+    getActiveLayerIndex(){
+        return this.getLayers().indexOf(this.activeLayer);
+    }
+
 }
 
 
@@ -130,6 +134,7 @@ export class Layer {
     visible = true;
     actions: LayerAction [] = [];
     podDocComp: PodDocumentComponent;
+    snapshotImageSrc: string;
     constructor(name: string) {
         this.name = name;
     }
@@ -171,6 +176,10 @@ export class Layer {
     getCurrentAction(){
         if(this.actions.length > 0) return this.actions[this.actions.length - 1];
         else return null;
+    }
+
+    setDataUrl(drawCanvas: HTMLCanvasElement){
+        this.snapshotImageSrc = drawCanvas.toDataURL();
     }
 }
 
@@ -256,6 +265,8 @@ export class BrushAction extends LayerAction {
            
             utensil.stroke();
         }
+
+
     }
 
     onDrawAction(canvas: HTMLCanvasElement, mousePos: Vector2D, activeDocument: PodDocument){

@@ -14,8 +14,10 @@ export class AppAction {
         switch(this.type) {
             case AppActionType.DRAW:
             let drawActionData = <DrawActionData>this.data;
-            let actionIndexInLayer = drawActionData.layer.actions.indexOf(drawActionData.action);
-            drawActionData.layer.actions.splice(actionIndexInLayer, 1);
+            let layer = drawActionData.layer;
+            let actionIndexInLayer = layer.actions.indexOf(drawActionData.action);
+            layer.actions.splice(actionIndexInLayer, 1);
+            layer.podDocComp.activeLayerSubscription.next(layer);
             break;
         }
     }
@@ -24,7 +26,9 @@ export class AppAction {
         switch(this.type) {
             case AppActionType.DRAW:
             let drawActionData = <DrawActionData>this.data;
-            drawActionData.layer.actions.push(drawActionData.action);
+            let layer = drawActionData.layer;
+            layer.actions.push(drawActionData.action);
+            layer.podDocComp.activeLayerSubscription.next(layer);
             break;
         }
     }
