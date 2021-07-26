@@ -5,7 +5,7 @@ import { FeatureInfo } from 'src/app/tools/classes/feature-info';
 import { GlobalEvents, HotKey } from 'src/app/tools/classes/global-events';
 import { PodDocument } from 'src/app/tools/classes/pod-document';
 import { PodFeature } from 'src/app/tools/enums/pod-feature';
-import { PodFileAction } from 'src/app/tools/pod-app-tools/pod-app-tools.component';
+import { PodEditAction, PodFileAction } from 'src/app/tools/pod-app-tools/pod-app-tools.component';
 import { NewPodWindowAction, NewPodWindowActionData } from 'src/app/windows/new-pod-window/new-pod-window.component';
 
 @Component({
@@ -109,7 +109,7 @@ export class PodComponent implements OnInit {
     }
     this.FEATURE_INFO.setShouldShowContextMenu(false);
   }
-  
+
 
 
   /*
@@ -144,6 +144,17 @@ export class PodComponent implements OnInit {
         break;
       case PodFileAction.SAVE_AS:
         this.GLOBAL_EVENTS.GLOBAL_HOT_KEY_EVENT.emit(HotKey.SAVE_AS);
+        break;
+    }
+  }
+
+  onEditActionReceived(editAction: PodEditAction) {
+    switch (editAction) {
+      case PodEditAction.UNDO:
+        this.GLOBAL_EVENTS.GLOBAL_HOT_KEY_EVENT.emit(HotKey.UNDO);
+        break;
+      case PodEditAction.REDO:
+        this.GLOBAL_EVENTS.GLOBAL_HOT_KEY_EVENT.emit(HotKey.REDO);
         break;
     }
   }

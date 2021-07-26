@@ -69,7 +69,7 @@
 
 .layer {
     display: grid;
-    grid-template-columns: 2.5em 1fr;
+    grid-template-columns: 2.5em 2.5em 1fr;
     border-color: transparent transparent var(--primary-color-accent) transparent;
     border-style: solid;
     border-width: 1px;
@@ -104,4 +104,33 @@
 
 .active-layer {
     background-color: var(--primary-color-light-1);
+}
+
+
+.layer-snapshot-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: .1em;
+    overflow: hidden;
+    border: 1px dashed var(--primary-color-dark);
+}
+
+.active-layer-snapshot {
+    border: 1px dashed white;
+}
+.layer-snapshot {
+    width: auto;
+    height: auto;
+    max-width: 2.5em;
+    max-height: 2em;
+    background-image: url("../../../assets/transparent_bg.jpg");
+    background-repeat: repeat;
+
+}
+
+.layer-name-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }

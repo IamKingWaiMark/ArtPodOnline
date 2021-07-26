@@ -3,6 +3,7 @@
         <app-pod-app-tools 
             [GLOBAL_EVENTS]="GLOBAL_EVENTS"
             (FILE_ACTIONS)="onFileActionReceived($event)"
+            (EDIT_ACTIONS)="onEditActionReceived($event)"
         ></app-pod-app-tools>
     </div>
     <div id="pod-tools">
