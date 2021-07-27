@@ -36,7 +36,8 @@
         <color-picker [GLOBAL_EVENTS]="GLOBAL_EVENTS" (selectedColor)="FEATURE_INFO?.setBrushColor($event)"></color-picker>
         <layers-window 
         [activeLayerSubscription]="podDocumentController?.activeLayerSubscription"
-        [activePodDocumentSubscription]="podDocumentController?.activePodDocumentSubscription"></layers-window>
+        [activePodDocumentSubscription]="podDocumentController?.activePodDocumentSubscription"
+        [GLOBAL_EVENTS]="GLOBAL_EVENTS"></layers-window>
     </div>
 
 </div>

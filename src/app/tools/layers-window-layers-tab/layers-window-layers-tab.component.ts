@@ -1,6 +1,7 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Component, HostListener, Inject, Input, OnInit, PLATFORM_ID } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { GlobalEvents } from '../classes/global-events';
 import { Layer, PodDocument } from '../classes/pod-document';
 
 @Component({
@@ -11,18 +12,34 @@ import { Layer, PodDocument } from '../classes/pod-document';
 export class LayersWindowLayersTabComponent implements OnInit {
   @Input() activePodDocumentSubscription: BehaviorSubject<PodDocument>;
   @Input() activeLayerSubscription: BehaviorSubject<Layer>;
+  @Input() GLOBAL_EVENTS: GlobalEvents;
   activePodDocument: PodDocument;
   dragging = false;
+  selectedLayer: Layer;
   constructor(@Inject(PLATFORM_ID) private platform: Object) { }
 
   ngOnInit(): void {
     if(isPlatformBrowser(this.platform)) {
+      this.subscribeToGlobalEvents();
       this.subscribeToActibePodDocument();
 
     }
   }
 
+  subscribeToGlobalEvents(){
+    this.GLOBAL_EVENTS.GLOBAL_MOUSE_MOVE_EVENT.subscribe(
+      ev => {
+        
+      }
+    );
+    this.GLOBAL_EVENTS.GLOBAL_MOUSE_UP_EVENT.subscribe(
+      ev => {
+        this.dragging = false;
 
+      }
+    );
+
+  }
 
   subscribeToActibePodDocument(){
     this.activePodDocumentSubscription.subscribe(
@@ -63,18 +80,39 @@ export class LayersWindowLayersTabComponent implements OnInit {
   }
 
   onLayerClick(layer: Layer) {
-
     this.activeLayerSubscription.next(layer);
   }
 
-  onLayerDragIconClick(){
-
+  onLayerDragIconClick(layer: Layer){
+    this.dragging = true;
+    this.selectedLayer = layer;
   }
   onToggleLayerVisibilityClick(layer: Layer) {
     layer.toggleVisibility();
     this.activeLayerSubscription.next(layer);
   }
 
+  onLayerMouseUp(layer: Layer){
+    if(layer == this.selectedLayer || !this.dragging) return;
+    let newLayerIndex = this.activePodDocument.getLayers().indexOf(layer);
+    let oldLayerIndex = this.activePodDocument.getLayers().indexOf(this.selectedLayer);
+    if(newLayerIndex > oldLayerIndex) {
+      this.activePodDocument.getLayers().splice(newLayerIndex + 1, 0, this.selectedLayer);
+      this.activePodDocument.getLayers().splice(oldLayerIndex, 1);
+    } else {
+      this.activePodDocument.getLayers().splice(newLayerIndex + 1, 0, this.selectedLayer);
+      this.activePodDocument.getLayers().splice(oldLayerIndex + 1, 1);
+    }
+    
+    this.activeLayerSubscription.next(this.activePodDocument.getActiveLayer());
+  }
+
+
+  onLayerNameInputTyped(layer: Layer, layerNameInput: HTMLInputElement) {
+    let name = layerNameInput.value;
+    name = (!name && name.length > 0)? name: layer.name;
+    layer.name = name;
+  }
 
 
 }

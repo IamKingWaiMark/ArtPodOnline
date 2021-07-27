@@ -63,6 +63,10 @@ export class PodDocument {
     getWorldPosition(){
         return this.worldPosition;
     }
+
+    setLayers(layers: Layer []) {
+        this.layers = layers;
+    }
     setWorldPosition(position: Vector2D){
         this.worldPosition = position;
     }
@@ -141,6 +145,16 @@ export class Layer {
     constructor(name: string) {
         this.name = name;
     }
+
+    copy(layer: Layer): Layer {
+        this.name = layer.name;
+        this.visible = layer.visible;
+        this.actions = layer.actions;
+        this.podDocComp = layer.podDocComp;
+        this.snapshotImageSrc = layer.snapshotImageSrc;
+        return this;
+    }
+
     getVisibilityIconSrc() {
         return this.visible ? "assets/icons/visibility_on_icon.png" : "assets/icons/visibility_off_icon.png";
     }
