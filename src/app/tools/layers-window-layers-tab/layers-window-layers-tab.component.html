@@ -7,23 +7,25 @@
 
     <div class="layers-tab-layer-section">
         <div class="layers-tab-layer-section-container">
-            <div 
-                [ngClass]="{'layer': true, 'active-layer': isActiveLayer(layer), 'layer-dragging': dragging}" 
-                *ngFor="let layer of activePodDocument?.getLayers(); index as i;">
+            <div [ngClass]="{'layer': true, 'active-layer': isActiveLayer(layer), 'layer-dragging': dragging}"
+                *ngFor="let layer of activePodDocument?.getLayers(); index as i;" (mouseup)="onLayerMouseUp(layer)">
 
                 <div class="layer-icon-container" (click)="onToggleLayerVisibilityClick(layer)">
                     <img [src]="layer?.getVisibilityIconSrc()" width="16" height="16" draggable="false">
                 </div>
-                <div [ngClass]="{'layer-snapshot-container': true, 'active-layer-snapshot': isActiveLayer(layer)}" >
-                    <img class="layer-snapshot" [src]="layer?.snapshotImageSrc" draggable="false">
+                <div [ngClass]="{'layer-snapshot-container': true, 'active-layer-snapshot': isActiveLayer(layer)}">
+                    <img class="layer-snapshot" [src]="layer?.snapshotImageSrc" draggable="false"
+                        (click)="onLayerClick(layer)">
                 </div>
                 <div class="layer-name-container" (click)="onLayerClick(layer)">
-                    <input [value]="layer.name" draggable="false"/>
+                    <input #layerNameInput [value]="layer.name" draggable="false" (keyup)="onLayerNameInputTyped(layer, layerNameInput)"/>
                 </div>
-                <div class="layer-dragger-container" (click)="onLayerDragIconClick()">
-                    <img src="assets/icons/layer_dragger.png" draggable="false"> 
+                <div class="layer-dragger-container" (mousedown)="onLayerDragIconClick(layer)">
+                    <img src="assets/icons/layer_dragger.png" draggable="false">
                 </div>
             </div>
+
+
         </div>
     </div>
 

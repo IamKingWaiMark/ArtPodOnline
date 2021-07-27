@@ -108,6 +108,7 @@ export class PodDocumentComponent implements OnInit {
             //this.SAVE_ACTIONS.___SAVE_DOCUMENT();
             break;
           case HotKey.MOVE_POD_DCOUMENT:
+            if(this.RENDER_ACTIONS.getShouldEdit()) return;
             this.setState(PodDocumentState.MOVE);
             break;
           case HotKey.UNDO:
@@ -133,7 +134,18 @@ export class PodDocumentComponent implements OnInit {
         this.ZOOM_ACTIONS.stopZooming();
         this.MOVE_ACTIONS.stopMoving();
         this.RENDER_ACTIONS.setShouldEdit(false);
-        this.RENDER_ACTIONS.render(false);
+        if (this.documentState) {
+          switch (this.documentState) {
+            case PodDocumentState.MOVE: this.MOVE_ACTIONS.onMouseMove(); break;
+          }
+        } else {
+          switch (this.selectedPodFeature) {
+            case PodFeature.ZOOM: break;
+            case PodFeature.BRUSH:
+              this.RENDER_ACTIONS.render(false);
+              break;
+          }
+        }
       }
     );
     this.GLOBAL_EVENTS.GLOBAL_MOUSE_DOWN_EVENT.subscribe(

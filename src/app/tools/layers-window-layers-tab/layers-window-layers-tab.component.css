@@ -73,7 +73,6 @@
     border-color: transparent transparent var(--primary-color-accent) transparent;
     border-style: solid;
     border-width: 1px;
-  
 }
 
 .layer-dragger-container {
@@ -84,9 +83,7 @@
 }
 
 .layer-dragging {
-    border-width: 2px;
-    border-style: solid;
-    border-color: transparent;
+
 }
 .layer-dragging:hover {
     border-color: transparent transparent #1cb7eb transparent;
@@ -132,6 +129,7 @@
     padding: .1em;
     overflow: hidden;
     border: 1px dashed var(--primary-color-dark);
+    cursor: pointer;
 }
 
 .active-layer-snapshot {

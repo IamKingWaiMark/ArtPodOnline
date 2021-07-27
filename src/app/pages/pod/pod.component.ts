@@ -82,12 +82,11 @@ export class PodComponent implements OnInit {
           case "y": this.GLOBAL_EVENTS.GLOBAL_HOT_KEY_EVENT.emit(HotKey.REDO); break;
         }
       } else if (ev.shiftKey) {
-        ev.preventDefault();
-        ev.stopPropagation();
+
       } else {
         switch (ev.key.toLowerCase()) {
           case "x": this.GLOBAL_EVENTS.GLOBAL_HOT_KEY_EVENT.emit(HotKey.SWAP_SWATCH); break;
-          case " ": ev.preventDefault(); ev.stopPropagation(); this.GLOBAL_EVENTS.GLOBAL_HOT_KEY_EVENT.emit(HotKey.MOVE_POD_DCOUMENT); break;
+          case " ": this.GLOBAL_EVENTS.GLOBAL_HOT_KEY_EVENT.emit(HotKey.MOVE_POD_DCOUMENT); break;
         }
       }
       this.GLOBAL_EVENTS.GLOBAL_KEYDOWN_EVENT.emit(ev);
