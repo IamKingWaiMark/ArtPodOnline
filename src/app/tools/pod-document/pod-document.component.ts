@@ -204,7 +204,8 @@ export class PodDocumentComponent implements OnInit {
       switch (this.selectedPodFeature) {
         case PodFeature.ZOOM: this.ZOOM_ACTIONS.start(); break;
         case PodFeature.BRUSH:
-
+          if(!this.activePodDocument?.getActiveLayer().visible) return;
+          this.RENDER_ACTIONS.setShouldEdit(true);
           this.activePodDocument.getActiveLayer().setAction(
             this,
             {
@@ -217,7 +218,7 @@ export class PodDocumentComponent implements OnInit {
             this.GLOBAL_MOUSE_POS,
             this.activePodDocument
           );
-          this.RENDER_ACTIONS.setShouldEdit(true);
+          
           break;
         case PodFeature.FILL:
           this.activePodDocument.getActiveLayer().setAction(
