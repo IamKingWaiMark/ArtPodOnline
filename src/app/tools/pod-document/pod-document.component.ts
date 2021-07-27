@@ -53,7 +53,7 @@ export class PodDocumentComponent implements OnInit {
       this.RENDER_ACTIONS = new RenderActions(this);
       this.DOCUMENT_ACTIONS = new PodDocumentActions(this);
       this.CURSOR_ACTIONS = new CursorActions(this);
-      this.SAVE_ACTIONS = new SaveActions();
+      this.SAVE_ACTIONS = new SaveActions(this);
 
 
       this.subscribeToDocumentStates();
@@ -105,7 +105,7 @@ export class PodDocumentComponent implements OnInit {
 
         switch (hotKey) {
           case HotKey.SAVE_AS:
-            //this.SAVE_ACTIONS.___SAVE_DOCUMENT();
+            this.SAVE_ACTIONS.saveDocumentTo("png");
             break;
           case HotKey.MOVE_POD_DCOUMENT:
             if(this.RENDER_ACTIONS.getShouldEdit()) return;
@@ -574,9 +574,20 @@ export class RenderActions {
       }
       currentLayer.setDataUrl(this.getDrawCanvas());
     }
-   
+    
 
 
+  }
+
+  renderFinalProductTo(canvas: HTMLCanvasElement){
+    let activeDocument = this.podDocComp.activePodDocument;
+    if (!activeDocument) return;
+    for (let i = activeDocument.getLayers().length - 1; i >= 0; i--) {
+      let currentLayer = activeDocument.getLayers()[i];
+      for (let action of currentLayer.actions) {
+        action.renderForFinal(canvas, activeDocument);
+      }
+    }
   }
 
   getCanvasContainer() {
@@ -757,11 +768,18 @@ export class CursorActions {
 
 
 export class SaveActions {
-  ___SAVE_DOCUMENT() {
-    let canvas = <HTMLCanvasElement>document.querySelector(".draw-canvas");
-    var link = document.createElement('a');
-    link.download = 'filename.png';
-    link.href = canvas.toDataURL();
+  podDocComp: PodDocumentComponent;
+  constructor(podDocComp: PodDocumentComponent) {
+    this.podDocComp = podDocComp;
+  }
+  saveDocumentTo(FILE_TYPE: string) {
+    let finalProduct = document.createElement("canvas");
+    finalProduct.width = this.podDocComp.activePodDocument.getWidth();
+    finalProduct.height = this.podDocComp.activePodDocument.getHeight();
+    this.podDocComp.RENDER_ACTIONS.renderFinalProductTo(finalProduct);
+    let link = document.createElement('a');
+    link.download = `${this.podDocComp.activePodDocument.getTitle()}.${FILE_TYPE}`;
+    link.href = finalProduct.toDataURL();
     link.click();
   }
 }

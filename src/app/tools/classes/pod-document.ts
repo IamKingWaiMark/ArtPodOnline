@@ -129,6 +129,10 @@ export class PodDocument {
         return index? index: 0;
     }
 
+    getTitle(){
+        return this.metaData.docName;
+    }
+
 }
 
 
@@ -217,6 +221,10 @@ export class LayerAction {
     render(canvas: HTMLCanvasElement, activeDocument: PodDocument) {
 
     }
+
+    renderForFinal(canvas: HTMLCanvasElement, activeDocument: PodDocument) {
+
+    }
     onDraw(canvas: HTMLCanvasElement, mousePos: Vector2D, activeDocument: PodDocument){
         let nowTime = new Date();
         let elapsed = nowTime.getTime() - this.startTime.getTime();
@@ -283,8 +291,28 @@ export class BrushAction extends LayerAction {
            
             utensil.stroke();
         }
+    }
 
-
+    renderForFinal(canvas: HTMLCanvasElement, activeDocument: PodDocument) {
+        let drawPoints = this.getData();
+        let utensil = canvas.getContext("2d");
+        utensil.lineWidth = this.utensilSize;
+        let fill = this.fill;
+        utensil.strokeStyle = `rgb(${fill.r}, ${fill.g}, ${fill.b})`;
+        utensil.lineCap = "round";
+        let offsetByScale = 1 / activeDocument.getInitialZoomScale();
+        for (let i = 1; i < drawPoints.length; i++) {
+            let lastDrawPoint = this.getDrawPointBefore(i);
+            utensil.beginPath();
+            utensil.moveTo(
+                (lastDrawPoint.mousePos.x * offsetByScale), 
+                (lastDrawPoint.mousePos.y * offsetByScale));
+            utensil.lineTo(
+                (drawPoints[i].mousePos.x * offsetByScale), 
+                (drawPoints[i].mousePos.y * offsetByScale));
+           
+            utensil.stroke();
+        }
     }
 
     onDrawAction(canvas: HTMLCanvasElement, mousePos: Vector2D, activeDocument: PodDocument){
