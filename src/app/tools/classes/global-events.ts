@@ -16,5 +16,6 @@ export enum HotKey {
     MOVE_POD_DCOUMENT,
     SAVE_AS,
     UNDO,
-    REDO
+    REDO,
+    FIX_MOUSE_POS
 }

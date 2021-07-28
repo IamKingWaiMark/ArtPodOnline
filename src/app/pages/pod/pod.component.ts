@@ -82,7 +82,7 @@ export class PodComponent implements OnInit {
           case "y": this.GLOBAL_EVENTS.GLOBAL_HOT_KEY_EVENT.emit(HotKey.REDO); break;
         }
       } else if (ev.shiftKey) {
-
+        this.GLOBAL_EVENTS.GLOBAL_HOT_KEY_EVENT.emit(HotKey.FIX_MOUSE_POS);
       } else {
         switch (ev.key.toLowerCase()) {
           case "x": this.GLOBAL_EVENTS.GLOBAL_HOT_KEY_EVENT.emit(HotKey.SWAP_SWATCH); break;
