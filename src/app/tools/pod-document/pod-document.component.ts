@@ -37,6 +37,9 @@ export class PodDocumentComponent implements OnInit {
   MOVE_ACTIONS: MoveActions = null;
   RENDER_ACTIONS: RenderActions = null;
   GLOBAL_MOUSE_POS: Vector2D = { x: 0, y: 0 };
+  FIX_MOUSE_POS_START: Vector2D = {x: 0, y: 0};
+  FIX_X_MOUSE = false;
+  FIX_Y_MOUSE = false;
   mouseUtilities = new MouseUtilities();
   documentState: PodDocumentState = null;
   stateSubscription = new BehaviorSubject<PodDocumentState>(this.documentState);
@@ -119,6 +122,14 @@ export class PodDocumentComponent implements OnInit {
             this.activePodDocument?.redo();
             this.RENDER_ACTIONS.render(true);
             break;
+          case HotKey.FIX_MOUSE_POS:
+            if((this.FIX_X_MOUSE == false || this.FIX_Y_MOUSE == false) && (this.RENDER_ACTIONS.getShouldEdit())) {
+              this.setState(PodDocumentState.FIX_MOUSE_POS);
+              this.FIX_MOUSE_POS_START.x = this.GLOBAL_MOUSE_POS.x;
+              this.FIX_MOUSE_POS_START.y = this.GLOBAL_MOUSE_POS.y;
+            }
+
+            break;
         }
 
       }
@@ -126,7 +137,7 @@ export class PodDocumentComponent implements OnInit {
     this.GLOBAL_EVENTS.GLOBAL_KEYUP_EVENT.subscribe(
       (ev: KeyboardEvent) => {
         this.setState(null);
-
+        this.FIX_X_MOUSE = this.FIX_Y_MOUSE = false;
       }
     );
     this.GLOBAL_EVENTS.GLOBAL_MOUSE_UP_EVENT.subscribe(
@@ -141,9 +152,8 @@ export class PodDocumentComponent implements OnInit {
         } else {
           switch (this.selectedPodFeature) {
             case PodFeature.ZOOM: break;
-            case PodFeature.BRUSH:
-              this.RENDER_ACTIONS.render(false);
-              break;
+            case PodFeature.BRUSH: this.RENDER_ACTIONS.render(false); break;
+            case PodFeature.ERASER: this.RENDER_ACTIONS.render(false); break;
           }
         }
       }
@@ -152,7 +162,7 @@ export class PodDocumentComponent implements OnInit {
       (ev: MouseEvent) => {
         this.GLOBAL_MOUSE_POS.x = ev.x;
         this.GLOBAL_MOUSE_POS.y = ev.y;
-
+        this.fixMousePos();
         if (this.mouseIsIn() && this.activePodDocument) {
           switch (ev.button) {
             case 0: this.onMouseDown_leftClick(); break;
@@ -166,17 +176,37 @@ export class PodDocumentComponent implements OnInit {
       (ev: MouseEvent) => {
         this.GLOBAL_MOUSE_POS.x = ev.x;
         this.GLOBAL_MOUSE_POS.y = ev.y;
+        this.fixMousePos();
         if (this.mouseIsIn() && this.activePodDocument) {
           this.CURSOR_ACTIONS.onMouseMove(this.documentState, this.selectedPodFeature, this.GLOBAL_MOUSE_POS);
 
           if (this.documentState) {
             switch (this.documentState) {
               case PodDocumentState.MOVE: this.MOVE_ACTIONS.onMouseMove(); break;
+              case PodDocumentState.FIX_MOUSE_POS: 
+                if(this.mouseUtilities.isGoingLeft(this.FIX_MOUSE_POS_START, this.GLOBAL_MOUSE_POS) || 
+                  this.mouseUtilities.isGoingRight(this.FIX_MOUSE_POS_START, this.GLOBAL_MOUSE_POS)) {
+                    this.FIX_Y_MOUSE = true;
+                    this.setState(null);
+                } else if(this.mouseUtilities.isGoingUp(this.FIX_MOUSE_POS_START, this.GLOBAL_MOUSE_POS) || 
+                  this.mouseUtilities.isGoingDown(this.FIX_MOUSE_POS_START, this.GLOBAL_MOUSE_POS)) {
+                  this.FIX_X_MOUSE = true;
+                  this.setState(null);
+                }
+              break;
             }
           } else {
             switch (this.selectedPodFeature) {
               case PodFeature.ZOOM: this.ZOOM_ACTIONS.onMouseMove(); break;
               case PodFeature.BRUSH:
+                if (!this.RENDER_ACTIONS.getShouldEdit()) return;
+                this.activePodDocument.getActiveLayer().getCurrentAction()?.onDraw(
+                  this.RENDER_ACTIONS.getDrawCanvas(),
+                  this.GLOBAL_MOUSE_POS,
+                  this.activePodDocument
+                );
+                break;
+              case PodFeature.ERASER:
                 if (!this.RENDER_ACTIONS.getShouldEdit()) return;
                 this.activePodDocument.getActiveLayer().getCurrentAction()?.onDraw(
                   this.RENDER_ACTIONS.getDrawCanvas(),
@@ -204,6 +234,11 @@ export class PodDocumentComponent implements OnInit {
     );
   }
 
+  fixMousePos(){
+    if(this.FIX_Y_MOUSE) this.GLOBAL_MOUSE_POS.y = this.FIX_MOUSE_POS_START.y;
+    if(this.FIX_X_MOUSE) this.GLOBAL_MOUSE_POS.x = this.FIX_MOUSE_POS_START.x;
+  }
+  
   onMouseDown_leftClick() {
     if (this.FEATURE_INFO.getShouldShowContextMenu()) return;
     if (this.documentState) {
@@ -239,6 +274,21 @@ export class PodDocumentComponent implements OnInit {
               mousePos: { x: this.GLOBAL_MOUSE_POS.x, y: this.GLOBAL_MOUSE_POS.y },
               fill: this.FEATURE_INFO.getBrushColor()
             });
+          break;
+        case PodFeature.ERASER:
+          this.RENDER_ACTIONS.setShouldEdit(true);
+          this.activePodDocument.getActiveLayer().setAction(
+            this,
+            {
+              mousePos: { x: this.GLOBAL_MOUSE_POS.x, y: this.GLOBAL_MOUSE_POS.y },
+              fill: {r: 0, g: 0, b: 0, a: 0},
+              utensilSize: this.FEATURE_INFO.getEraserSize()
+            });
+          this.activePodDocument.getActiveLayer().getCurrentAction()?.onDraw(
+            this.RENDER_ACTIONS.getDrawCanvas(),
+            this.GLOBAL_MOUSE_POS,
+            this.activePodDocument
+          );
           break;
       }
     }

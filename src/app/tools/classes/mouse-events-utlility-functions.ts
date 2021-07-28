@@ -9,4 +9,11 @@ export class MouseUtilities {
     isGoingRight(lastMousePosition: Vector2D, currentMousePosition: Vector2D){
         return currentMousePosition.x > lastMousePosition.x;
     }
+
+    isGoingUp(lastMousePosition: Vector2D, currentMousePosition: Vector2D){
+        return currentMousePosition.y < lastMousePosition.y;
+    }
+    isGoingDown(lastMousePosition: Vector2D, currentMousePosition: Vector2D){
+        return currentMousePosition.y > lastMousePosition.y;
+    }
 }
