@@ -126,9 +126,14 @@ export class NewPodWindowComponent implements OnInit {
       name: "A10"
     })
   ];
-
+  private readonly MAX_PIXELS = 5000;
+  private readonly MAX_INCHES = 35;
+  private readonly MAX_PIXELS_PER_INCH = 300;
   selectedPresetIndex = 0;
-
+  maxDimensions = 5000;
+  maxPPI = this.MAX_PIXELS_PER_INCH;
+  selectedMetrics: PresetMetric = PresetMetric.PIXEL;
+ 
   constructor(@Inject(PLATFORM_ID) private platform: Object) { }
 
   ngOnInit(): void {
@@ -153,14 +158,13 @@ export class NewPodWindowComponent implements OnInit {
     let ppiInput = <HTMLInputElement>document.getElementById("pod-window-ppi-input");
     ppiInput.value = podPreset.ppi + "";
     let metricsSelect = <HTMLSelectElement>document.getElementById("pod-window-metrics-select");
-    metricsSelect.value = podPreset.type;
+    this.selectedMetrics = metricsSelect.value = podPreset.type;
   }
 
   getDocumentMetaData() {
     let widthInput = <HTMLInputElement>document.getElementById("pod-window-width-input");
     let heightInput = <HTMLInputElement>document.getElementById("pod-window-height-input");
     let ppiInput = <HTMLInputElement>document.getElementById("pod-window-ppi-input");
-    let metricsSelect = <HTMLSelectElement>document.getElementById("pod-window-metrics-select");
     let nameInout = <HTMLInputElement>document.getElementById("pod-window-title-input");
     let presetData = new PodPreset(
       {
@@ -168,7 +172,7 @@ export class NewPodWindowComponent implements OnInit {
         w: parseInt(widthInput.value),
         h: parseInt(heightInput.value),
         ppi: parseInt(ppiInput.value),
-        type: this.metricSelectValueToPresetMetric(metricsSelect.value),
+        type: this.selectedMetrics,
         name: null
       }
     );
@@ -206,6 +210,53 @@ export class NewPodWindowComponent implements OnInit {
       return false;
     }
   }
+
+  onMetricsClick(){
+    let metricsSelector = <HTMLSelectElement> document.getElementById("pod-window-metrics-select");
+
+    if(!metricsSelector || metricsSelector.value.length < 0) return;
+    this.selectedMetrics = this.metricSelectValueToPresetMetric(metricsSelector.value);
+    switch(this.selectedMetrics) {
+      case PresetMetric.PIXEL:
+        this.maxPPI = 1;
+        this.maxDimensions = this.MAX_PIXELS; 
+        this.clampPPIAndDimensionsForPixels();
+        break;
+      case PresetMetric.INCHES:
+        this.maxPPI = this.MAX_PIXELS_PER_INCH;
+        this.maxDimensions = this.MAX_INCHES;
+        this.clampPPIAndDimensionsForInches();
+        break;
+    }
+  }
+  clampPPIAndDimensionsForPixels() {
+    let widthInput = <HTMLInputElement> document.getElementById("pod-window-width-input");
+    let heightInput = <HTMLInputElement> document.getElementById("pod-window-height-input");
+    let ppiInput = <HTMLInputElement> document.getElementById("pod-window-ppi-input");
+    let w = parseInt(widthInput.value);
+    let h = parseInt(heightInput.value);
+    widthInput.value = w > this.MAX_PIXELS? this.MAX_PIXELS + "": w + "";
+    heightInput.value = h > this.MAX_PIXELS? this.MAX_PIXELS + "": h + "";
+    ppiInput.value = "1";
+    
+  }
+  clampPPIAndDimensionsForInches() {
+    let widthInput = <HTMLInputElement> document.getElementById("pod-window-width-input");
+    let heightInput = <HTMLInputElement> document.getElementById("pod-window-height-input");
+    let ppiInput = <HTMLInputElement> document.getElementById("pod-window-ppi-input");
+    let w = parseInt(widthInput.value);
+    let h = parseInt(heightInput.value);
+    let ppi = parseInt(ppiInput.value);
+    widthInput.value = w > this.MAX_INCHES? this.MAX_INCHES + "": w + "";
+    heightInput.value = h > this.MAX_INCHES? this.MAX_INCHES + "": h + "";
+    ppiInput.value = ppi > this.MAX_PIXELS_PER_INCH? this.MAX_PIXELS_PER_INCH + "": ppi + "";
+    
+  }
+
+  shouldNotDisplayPPIInput(){
+    return this.selectedMetrics == PresetMetric.PIXEL;
+  }
+
 
 }
 
