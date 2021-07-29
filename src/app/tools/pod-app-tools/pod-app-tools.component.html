@@ -30,5 +30,30 @@
             </div>
         </div>
     </div>
-    
+    <div class="pod-tool-menu">
+        <span><a>Policy</a></span>
+    </div>
+    <div class="pod-tool-menu">
+        <span><a>About</a></span>
+    </div>
+    <div class="pod-tool-menu">
+        <span (click)="onColorSchemeClick()">Color Scheme</span>
+        <div *ngIf="colorSchemeActive()" class="pod-tool-action-list">
+            <div class="pod-tool-action-list-item-with-icon" (click)="onDarkColorSchemeClick()">
+                <div class="status-icon-container">
+                    <img *ngIf="isDarkTheme()" src="assets/icons/check.png">
+                </div>
+                <p>Dark</p>
+                <p></p>
+            </div>
+            <!--<div class="pod-tool-action-list-item-with-icon" (click)="onLightColorSchemeClick()">
+                <div class="status-icon-container">
+                    <img *ngIf="isLightTheme()" src="assets/icons/check.png">
+                </div>
+                <p>Light</p>
+                <p></p>
+            </div>-->
+        </div>
+
+    </div>
 </div>

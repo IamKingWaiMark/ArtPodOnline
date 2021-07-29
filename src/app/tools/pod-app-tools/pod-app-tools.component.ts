@@ -13,6 +13,7 @@ export class PodAppToolsComponent implements OnInit {
   @Output() EDIT_ACTIONS = new EventEmitter<PodEditAction>();
 
   activePodTool: ActivePodTool = null;
+  colorScheme = ColorScheme.DARK;
 
   constructor(@Inject(PLATFORM_ID) private platform: Object) { }
 
@@ -51,12 +52,20 @@ export class PodAppToolsComponent implements OnInit {
     this.activePodTool = ActivePodTool.EDIT;
   }
 
+
+  onColorSchemeClick(){
+    this.activePodTool = ActivePodTool.THEME;
+  }
+
   fileToolActive() {
     return this.activePodTool == ActivePodTool.FILE;
   }
 
   editToolActive() {
     return this.activePodTool == ActivePodTool.EDIT;
+  }
+  colorSchemeActive() {
+    return this.activePodTool == ActivePodTool.THEME;
   }
 
   getCtrlKeyText() {
@@ -95,12 +104,43 @@ export class PodAppToolsComponent implements OnInit {
     }
     this.activePodTool = null;
   }
+
+  onDarkColorSchemeClick(){
+    this.removeSchemes();
+    document.body.classList.add("dark-mode");
+    this.activePodTool = null;
+    this.colorScheme = ColorScheme.DARK;
+  }
+
+  onLightColorSchemeClick(){
+    this.removeSchemes();
+    document.body.classList.add("light-mode");
+    this.activePodTool = null;
+    this.colorScheme = ColorScheme.LIGHT;
+  }
+
+  removeSchemes(){
+    document.body.classList.remove("dark-mode");
+    document.body.classList.remove("light-mode");
+  }
+
+  isDarkTheme(){
+    return this.colorScheme == ColorScheme.DARK;
+  }
+  isLightTheme(){
+    return this.colorScheme == ColorScheme.LIGHT;
+  }
+
 }
 
-
+export enum ColorScheme {
+  DARK,
+  LIGHT
+}
 export enum ActivePodTool {
   FILE,
-  EDIT
+  EDIT,
+  THEME
 }
 
 export enum PodFileAction {
@@ -113,4 +153,3 @@ export enum PodEditAction {
   UNDO,
   REDO
 }
-
