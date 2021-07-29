@@ -299,6 +299,31 @@ export class BrushAction extends LayerAction {
 
             utensil.stroke();
         }
+        var ctx = canvas.getContext("2d");     
+/*ctx.beginPath();
+
+//polygon1--- usually the outside polygon, must be clockwise
+ctx.moveTo(0, 0);
+ctx.lineTo(200, 0);
+ctx.lineTo(200, 200);
+ctx.lineTo(0, 200);
+ctx.lineTo(0, 0);
+ctx.closePath();
+
+//polygon2 --- usually hole,must be counter-clockwise 
+ctx.moveTo(10, 10);
+ctx.lineTo(10,100);
+ctx.lineTo(100, 100);
+ctx.lineTo(100, 10);
+ctx.lineTo(10, 10);
+ctx.closePath();
+
+//  add as many holes as you want
+ctx.fillStyle = "#FF0000";
+ctx.strokeStyle = "rgba(0.5,0.5,0.5,0.5)";
+ctx.lineWidth = 1;
+ctx.fill();
+ctx.stroke();*/
     }
 
     renderForFinal(canvas: HTMLCanvasElement, activeDocument: PodDocument) {

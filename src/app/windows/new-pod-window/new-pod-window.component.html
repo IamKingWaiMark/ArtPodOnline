@@ -14,8 +14,9 @@
         <div class="label"><span>Width</span></div>
         <span></span>
 
-        <input id="pod-window-width-input" class="dark-input" type="number" min="1" max="5000" value="1">
-        <select id="pod-window-metrics-select" class="dark-input" name="pod-window-metrics-select">
+        <input (change)="onMetricsClick()" id="pod-window-width-input" class="themed-input" type="number" min="1" max="maxDimensions" value="1">
+        <select id="pod-window-metrics-select" class="themed-input" name="pod-window-metrics-select"
+            (click)="onMetricsClick()">
             <option value="px">Pixels</option>
             <option value="in">Inches</option>
         </select>
@@ -23,12 +24,12 @@
         <div class="label"><span>Height</span></div>
         <span></span>
 
-        <input id="pod-window-height-input" class="dark-input" type="number" min="1" max="5000" value="1">
+        <input (change)="onMetricsClick()" id="pod-window-height-input" class="themed-input" type="number" min="1" max="maxDimensions" value="1">
         <span></span>
 
         <div class="label"><span>Pixels/Inch</span></div>
         <span></span>
-        <input id="pod-window-ppi-input" class="dark-input" type="number" min="1" max="5000" value="1">
+        <input [disabled]="shouldNotDisplayPPIInput()" (change)="onMetricsClick()" id="pod-window-ppi-input" class="themed-input" type="number" min="1" max="maxPPI" value="1">
     </div>
     <div id="pod-window-box-3">
 

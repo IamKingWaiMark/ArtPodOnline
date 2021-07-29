@@ -14,6 +14,8 @@ html, body {
     --primary-color-accent: #424242;
     --primary-color-accent-1: #4d4d4d;
     --primary-color-dark: #282828;
+    --themed-input-border: #f0f0f0;
+    --themed-text-color: white;
     --disabled-color: #4d4d4d;
     --primary-context-menu-bg: #f0f0f0;
     --app-fade-text: #b8b8b8;
@@ -27,6 +29,8 @@ html, body {
     --primary-color-accent: #424242;
     --primary-color-accent-1: #4d4d4d;
     --primary-color-dark: #282828;
+    --themed-input-border: #f0f0f0;
+    --themed-text-color: white;
     --disabled-color: #4d4d4d;
     --primary-context-menu-bg: #f0f0f0;
     --app-fade-text: #b8b8b8;
@@ -40,6 +44,8 @@ html, body {
     --primary-color-accent: #bdbdbd;
     --primary-color-accent-1: #a5a5a5;
     --primary-color-dark: #e9e9e9;
+    --themed-input-border: #f0f0f0;
+    --themed-text-color: white;
     --disabled-color: #4d4d4d;
     --primary-context-menu-bg: #f0f0f0;
     --app-fade-text: #b8b8b8;
@@ -90,11 +96,16 @@ button {
 
 
 
-.dark-input {
-    border: 1px solid white;
+.themed-input {
+    border: 1px solid var(--themed-input-border);
     background-color: var(--primary-color-dark);
-    color: white;
+    color: var(--themed-text-color);
     outline: none;
+}
+
+.themed-input:disabled {
+    background-color: var(--disabled-color);
+    border-color: var(--disabled-color);
 }
 
 
