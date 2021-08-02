@@ -60,11 +60,17 @@ export class LayersWindowLayersTabComponent implements OnInit {
   
   onDeleteLayerClick(){
     let activeLayerIndex = this.activePodDocument?.getActiveLayerIndex();
-    this.activePodDocument.deleteLayer(activeLayerIndex);
-    activeLayerIndex = this.clampActiveLayerIndex(activeLayerIndex);
-    let activeLayer = this.activePodDocument.getLayers()[activeLayerIndex];
-    this.activePodDocument.setActiveLayer(activeLayer);
-    this.activeLayerSubscription.next(activeLayer);
+    if(this.activePodDocument.canDeleteLayer()) {
+      this.activePodDocument.removeUndoAndRedoActionsWithLayerWhenDeleted(this.activePodDocument.getActiveLayer());
+      this.activePodDocument.deleteLayer(activeLayerIndex);
+      activeLayerIndex = this.clampActiveLayerIndex(activeLayerIndex);
+      let activeLayer = this.activePodDocument.getLayers()[activeLayerIndex];
+      
+      this.activePodDocument.setActiveLayer(activeLayer);
+      this.activeLayerSubscription.next(activeLayer);
+    }
+
+
   }
 
   clampActiveLayerIndex(num: number){
