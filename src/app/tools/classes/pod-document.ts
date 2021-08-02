@@ -6,6 +6,10 @@ import { AppAction } from "./app-action";
 import { PodPreset } from "./pod-preset";
 import { Vector2D } from "./vectors";
 
+
+
+declare var cv: any;
+
 export class PodDocument {
 
     private readonly MAX_UNDOS = 50;
@@ -193,6 +197,8 @@ export class Layer {
         );
     }
 
+
+
     offsetMousePosWithScale(mousePos: Vector2D, activeDocument: PodDocument) {
         let offsetByScale = activeDocument.getZoomScale() / activeDocument.getInitialZoomScale();
 
@@ -211,7 +217,7 @@ export class Layer {
 
 
 export class LayerAction {
-    data: any = [];
+    data: any [] = [];
     fill: { r: number, g: number, b: number, a?: number } = { r: 0, g: 0, b: 0, a: 1 };
     utensilSize: number;
     startTime: Date;
@@ -256,8 +262,209 @@ export class LayerAction {
 }
 
 export class FillAction extends LayerAction {
+    currentScale: number;
+    initialWorldPositionX: number;
+    initialWorldPositionY: number;
+    constructor(layer: Layer, actionData: ActionData) {
+        super(layer, actionData);
+        let temporaryCanvas = <HTMLCanvasElement>document.createElement("canvas");
+        let drawCanvas = this.layer.podDocComp.RENDER_ACTIONS.getDrawCanvas();
+        temporaryCanvas.width = drawCanvas.width;
+        temporaryCanvas.height = drawCanvas.height;
+        let activeDocument = this.layer.podDocComp.activePodDocument;
+        this.currentScale = activeDocument.getZoomScale();
+        this.initialWorldPositionX = activeDocument.getWorldPosition().x;
+        this.initialWorldPositionY = activeDocument.getWorldPosition().y;
+        this.turnCanvasToBlackAndWhite(actionData.mousePos.x, actionData.mousePos.y, drawCanvas, temporaryCanvas);
+        this.findContours(actionData.mousePos.x, actionData.mousePos.y, drawCanvas, temporaryCanvas);
+        this.render(drawCanvas, this.layer.podDocComp.activePodDocument);
+    
+    }
+    turnCanvasToBlackAndWhite(mouseX: number, mouseY: number, drawCanvas: HTMLCanvasElement, temporaryCanvas: HTMLCanvasElement) {
+        let drawCanvasDimensions = drawCanvas.getBoundingClientRect();
+        let drawCanvasUtensil = drawCanvas.getContext("2d");
+        let drawCanvasData = drawCanvasUtensil.getImageData(0, 0, drawCanvasDimensions.width, drawCanvasDimensions.height);
+
+        let temporaryCanvasUtensil = temporaryCanvas.getContext("2d");
+        let temporaryCanvasData = temporaryCanvasUtensil.getImageData(0, 0, drawCanvasDimensions.width, drawCanvasDimensions.height);
+        let temporaryCanvasDimensions = temporaryCanvas.getBoundingClientRect();
+        let color = drawCanvasUtensil.getImageData(
+            mouseX - drawCanvasDimensions.x - temporaryCanvasDimensions.x, 
+            mouseY - drawCanvasDimensions.y - temporaryCanvasDimensions.y, 
+            1, 1);
+
+        let r = color.data[0];
+        let g = color.data[1];
+        let b = color.data[2];
+        let a = color.data[3];
+        let redScope = 24;
+        let greenScope = 24;
+        let blueScope = 24;
+
+        if (r > g && r > b) {
+            redScope += 15;
+        } else if (g > r && g > b) {
+            greenScope += 15;
+        } else {
+            blueScope += 15;
+        }
+        for (let i = 0; i < drawCanvasData.data.length; i += 4) {
 
 
+            let r2 = drawCanvasData.data[i];
+            let g2 = drawCanvasData.data[i + 1];
+            let b2 = drawCanvasData.data[i + 2];
+            let a2 = drawCanvasData.data[i + 3];
+
+            if (r >= r2 - redScope && r <= r2 + redScope &&
+                g >= g2 - greenScope && g <= g + greenScope &&
+                b >= b2 - blueScope && b <= b2 + blueScope &&
+                a == a2) {
+                temporaryCanvasData.data[i] = 255;
+                temporaryCanvasData.data[i + 1] = 255;
+                temporaryCanvasData.data[i + 2] = 255;
+                temporaryCanvasData.data[i + 3] = 255;
+            } else {
+                temporaryCanvasData.data[i] = 0;
+                temporaryCanvasData.data[i + 1] = 0;
+                temporaryCanvasData.data[i + 2] = 0;
+                temporaryCanvasData.data[i + 3] = 255;
+            }
+
+        }
+
+        temporaryCanvasUtensil.putImageData(temporaryCanvasData, 0, 0);
+    }
+    findContours(mouseX: number, mouseY: number, drawCanvas: HTMLCanvasElement, temporaryCanvas: HTMLCanvasElement) {
+        let src = cv.imread(temporaryCanvas);
+        cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+        cv.threshold(src, src, 195, 200, cv.THRESH_BINARY);
+        let contours = new cv.MatVector();
+        let hierarchy = new cv.Mat();
+        let canvasDimensions = temporaryCanvas.getBoundingClientRect();
+        let drawCanvasDimensions = drawCanvas.getBoundingClientRect();
+        cv.findContours(src, contours, hierarchy, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE);
+        let index = -1;
+        let outsideContours = [];
+        let shortestDistance = -1;
+
+        for (let i = 0; i < contours.size(); ++i) {
+            let dist = cv.pointPolygonTest(contours.get(i),
+                new cv.Point(
+                    mouseX - canvasDimensions.x - drawCanvasDimensions.x,
+                    mouseY - canvasDimensions.y - drawCanvasDimensions.y),
+                true);
+
+            if (dist > 0) {
+                if (shortestDistance < 0 || dist < shortestDistance) {
+                    shortestDistance = dist;
+                    index = i;
+                }
+
+            }
+        }
+
+        if (index >= 0) {
+            let mainContour = contours.get(index);
+            let areaOfWrappingContour = cv.contourArea(mainContour);
+            for (let i = 0; i < contours.size(); ++i) {
+
+                if (i != index) {
+                    let area = cv.contourArea(contours.get(i));
+                    let currentContour = contours.get(i);
+                    let p = { x: 0, y: 0 };
+                    p.x = currentContour.data32S[currentContour.data32S.length - 2];
+                    p.y = currentContour.data32S[currentContour.data32S.length - 1];
+                    let currentContourTestInside = cv.pointPolygonTest(mainContour, new cv.Point(p.x, p.y), true);
+                    if (currentContourTestInside > 0 && area >= (areaOfWrappingContour * .0001)) {
+                        outsideContours.push(i);
+                    }
+                }
+            }
+           
+            this.addToData(mainContour);
+            for (let k = 0; k < outsideContours.length; k++) {
+                let outsideContour = contours.get(outsideContours[k]);
+                let p = { x: 0, y: 0 };
+                p.x = outsideContour.data32S[outsideContour.data32S.length - 2];
+                p.y = outsideContour.data32S[outsideContour.data32S.length - 1];
+                let skip = false;
+                for (let o = 0; o < outsideContours.length; o++) {
+                    if (o != k) {
+                        let currentContour = contours.get(outsideContours[o]);
+                        let dist = cv.pointPolygonTest(currentContour, new cv.Point(p.x, p.y), true);
+                        if (dist > 0) {
+                            skip = true;
+                            break;
+                        }
+                        
+                    }
+                }
+                if (!skip) {
+                    this.addToData(outsideContour);
+                }
+    
+            }
+    
+        }
+
+       
+
+        src.delete();
+        contours.delete();
+        hierarchy.delete();
+        if (this.data.length <= 0) {
+            this.layer.actions.splice(this.layer.actions.indexOf(this));
+        }
+
+    }
+    render(canvas: HTMLCanvasElement, activeDocument: PodDocument) {
+
+        
+        let c = this.data[0];
+        if(!c) return;
+        let offsetByScale = activeDocument.getZoomScale() / this.currentScale;
+        
+
+        let utensil = canvas.getContext("2d");
+        utensil.beginPath();
+        let p = { x: 0, y: 0 };
+        p.x = (c.data32S[c.data32S.length - 2] * offsetByScale) + activeDocument.getWorldPosition().x - this.initialWorldPositionX * offsetByScale;
+        p.y = (c.data32S[c.data32S.length - 1] * offsetByScale) + activeDocument.getWorldPosition().y - this.initialWorldPositionY * offsetByScale;
+        utensil.moveTo(p.x, p.y);
+        for (let j = c.data32S.length - 1; j >= 0; j -= 2) {
+            let p = { x: 0, y: 0 };
+            p.x = (c.data32S[j - 1] * offsetByScale) + activeDocument.getWorldPosition().x - this.initialWorldPositionX * offsetByScale;
+            p.y = (c.data32S[j] * offsetByScale) + activeDocument.getWorldPosition().y - this.initialWorldPositionY * offsetByScale;
+            utensil.lineTo(p.x, p.y);
+
+        }
+        utensil.closePath();
+        for (let k = 1; k < this.data.length; k++) {
+            let outsideContour = this.data[k];
+
+
+            let p = { x: 0, y: 0 };
+            p.x = (outsideContour.data32S[outsideContour.data32S.length - 2] * offsetByScale) + activeDocument.getWorldPosition().x - this.initialWorldPositionX * offsetByScale;
+            p.y = (outsideContour.data32S[outsideContour.data32S.length - 1] * offsetByScale) + activeDocument.getWorldPosition().y - this.initialWorldPositionY * offsetByScale;
+
+            utensil.moveTo(p.x, p.y);
+            for (let j = outsideContour.data32S.length - 1; j >= 0; j -= 2) {
+                let p = { x: 0, y: 0 };
+                p.x = (outsideContour.data32S[j - 1] * offsetByScale) + activeDocument.getWorldPosition().x - this.initialWorldPositionX * offsetByScale;
+                p.y = (outsideContour.data32S[j] * offsetByScale) + activeDocument.getWorldPosition().y - this.initialWorldPositionY * offsetByScale;
+                utensil.lineTo(p.x, p.y);
+            }
+            utensil.closePath();
+
+        }
+        utensil.strokeStyle = `rgb(${this.fill.r}, ${this.fill.g}, ${this.fill.b})`;
+        utensil.lineWidth = 4 * offsetByScale;
+        utensil.stroke();
+        utensil.fillStyle = `rgb(${this.fill.r}, ${this.fill.g}, ${this.fill.b})`;
+        utensil.fill();
+
+    }
 }
 
 export class BrushAction extends LayerAction {
@@ -299,31 +506,7 @@ export class BrushAction extends LayerAction {
 
             utensil.stroke();
         }
-        var ctx = canvas.getContext("2d");     
-/*ctx.beginPath();
 
-//polygon1--- usually the outside polygon, must be clockwise
-ctx.moveTo(0, 0);
-ctx.lineTo(200, 0);
-ctx.lineTo(200, 200);
-ctx.lineTo(0, 200);
-ctx.lineTo(0, 0);
-ctx.closePath();
-
-//polygon2 --- usually hole,must be counter-clockwise 
-ctx.moveTo(10, 10);
-ctx.lineTo(10,100);
-ctx.lineTo(100, 100);
-ctx.lineTo(100, 10);
-ctx.lineTo(10, 10);
-ctx.closePath();
-
-//  add as many holes as you want
-ctx.fillStyle = "#FF0000";
-ctx.strokeStyle = "rgba(0.5,0.5,0.5,0.5)";
-ctx.lineWidth = 1;
-ctx.fill();
-ctx.stroke();*/
     }
 
     renderForFinal(canvas: HTMLCanvasElement, activeDocument: PodDocument) {
@@ -406,7 +589,7 @@ ctx.stroke();*/
 
 export class EraserAction extends BrushAction {
 
-    constructor(layer: Layer, actionData: ActionData){
+    constructor(layer: Layer, actionData: ActionData) {
         super(layer, actionData);
         this.compositionOperation = "destination-out";
     }

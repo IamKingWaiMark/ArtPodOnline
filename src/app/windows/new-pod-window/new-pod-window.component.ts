@@ -127,8 +127,8 @@ export class NewPodWindowComponent implements OnInit {
     })
   ];
   private readonly MAX_PIXELS = 5000;
-  private readonly MAX_INCHES = 35;
-  private readonly MAX_PIXELS_PER_INCH = 300;
+  private readonly MAX_INCHES = 50;
+  private readonly MAX_PIXELS_PER_INCH = 250;
   selectedPresetIndex = 0;
   maxDimensions = 5000;
   maxPPI = this.MAX_PIXELS_PER_INCH;
