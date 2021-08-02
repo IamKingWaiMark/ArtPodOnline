@@ -32,5 +32,9 @@ export class AppAction {
             break;
         }
     }
+
+    getLayer(){
+        return this.data.layer;
+    }
 }
 

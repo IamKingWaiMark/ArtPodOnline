@@ -36,9 +36,15 @@ export class PodDocument {
         return layer;
     }
 
-    deleteLayer(index: number) {
-        if (this.layers.length > 1)
+    canDeleteLayer(){
+        return this.layers.length > 1;
+    }
+    deleteLayer(index: number): boolean {
+        if (this.layers.length > 1) {
             this.layers.splice(index, 1);
+            return true;
+        }
+        return false;
     }
 
 
@@ -122,6 +128,23 @@ export class PodDocument {
         }
     }
 
+    removeUndoAndRedoActionsWithLayerWhenDeleted(layer: Layer){
+        let a = 0;
+        for(let i = 0; i < this.undoActions.length; i++) {
+            let actionLayer = this.undoActions[i].getLayer();
+            if(actionLayer == layer) {
+                this.undoActions.splice(i--, 1);
+            }
+            console.log(a++);
+        }
+        for(let i = 0; i < this.redoActions.length; i++) {
+            let actionLayer = this.redoActions[i].getLayer();
+            if(actionLayer == layer) {
+                this.redoActions.splice(i--, 1);
+            }
+        }
+    }
+
     addToUndoActions(action: AppAction) {
         this.undoActions.push(action);
         if (this.redoActions.length > 0) this.redoActions = [];
@@ -172,7 +195,7 @@ export class Layer {
     }
 
     setAction(podDocComp: PodDocumentComponent, data: ActionData) {
-        this.podDocComp = podDocComp;
+        this.setPodDocComp(podDocComp);
         let action: LayerAction;
         switch (this.podDocComp.selectedPodFeature) {
             case PodFeature.BRUSH:
@@ -197,6 +220,21 @@ export class Layer {
         );
     }
 
+    setBackgroundColor(podDocComp: PodDocumentComponent, data: ActionData, addToUndoStack?: boolean){
+        this.setPodDocComp(podDocComp);
+        let action = new FillAction(this, data);
+        this.actions.push(action);
+        if(addToUndoStack) {
+            this.podDocComp.activePodDocument.addToUndoActions(
+                new AppAction(AppActionType.DRAW,
+                    <DrawActionData>{
+                        layer: this,
+                        action
+                    })
+            );
+        }
+    }
+
 
 
     offsetMousePosWithScale(mousePos: Vector2D, activeDocument: PodDocument) {
@@ -211,6 +249,10 @@ export class Layer {
 
     setDataUrl(drawCanvas: HTMLCanvasElement) {
         this.snapshotImageSrc = drawCanvas.toDataURL();
+    }
+
+    setPodDocComp(podDocComp: PodDocumentComponent) {
+        this.podDocComp = podDocComp;
     }
 
 }
@@ -265,6 +307,7 @@ export class FillAction extends LayerAction {
     currentScale: number;
     initialWorldPositionX: number;
     initialWorldPositionY: number;
+    compositionOperation = "source-over";
     constructor(layer: Layer, actionData: ActionData) {
         super(layer, actionData);
         let temporaryCanvas = <HTMLCanvasElement>document.createElement("canvas");
@@ -427,6 +470,7 @@ export class FillAction extends LayerAction {
         
 
         let utensil = canvas.getContext("2d");
+        utensil.globalCompositeOperation = this.compositionOperation;
         utensil.beginPath();
         let p = { x: 0, y: 0 };
         p.x = (c.data32S[c.data32S.length - 2] * offsetByScale) + activeDocument.getWorldPosition().x - this.initialWorldPositionX * offsetByScale;
@@ -459,6 +503,7 @@ export class FillAction extends LayerAction {
 
         }
         utensil.strokeStyle = `rgb(${this.fill.r}, ${this.fill.g}, ${this.fill.b})`;
+        
         utensil.lineWidth = 4 * offsetByScale;
         utensil.stroke();
         utensil.fillStyle = `rgb(${this.fill.r}, ${this.fill.g}, ${this.fill.b})`;

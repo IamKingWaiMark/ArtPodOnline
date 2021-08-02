@@ -500,6 +500,14 @@ export class PodDocumentActions {
     this.podDocComp.RENDER_ACTIONS.matchCanvasWithCanvasFrameContainer();
     if (this.podDocComp.activePodDocument.getLayers().length <= 0) {
       let firstLayer = this.podDocComp.activePodDocument.addLayer(0);
+      let drawCanvasDimensions = this.podDocComp.RENDER_ACTIONS.getDrawCanvas().getBoundingClientRect();
+      firstLayer.setBackgroundColor(
+        this.podDocComp,
+        {
+          mousePos: {x: drawCanvasDimensions.x + 1, y: drawCanvasDimensions.y + 1},
+          fill: {r: 255, g: 255, b: 255}
+        }
+      );
       this.podDocComp.activeLayerSubscription.next(firstLayer);
     }
 
@@ -615,7 +623,7 @@ export class RenderActions {
                 action.render(this.getTopCanvas(), activeDocument);
               }
             }
-
+            
 
           }
         } else {
