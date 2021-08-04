@@ -72,8 +72,9 @@
 }
 
 
-.bottom-canvas, .draw-canvas, .top-canvas {
+.bottom-canvas, .draw-canvas, .top-canvas, .effects-canvas {
     position: absolute;
     top: 0;
     left: 0;
 }
+
