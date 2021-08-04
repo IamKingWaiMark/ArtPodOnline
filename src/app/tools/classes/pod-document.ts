@@ -265,6 +265,8 @@ export class LayerAction {
     utensilSize: number;
     startTime: Date;
     layer: Layer;
+    readonly DEFAULT_COMPPSITION_OPERATION = "source-over";
+    compositionOperation = this.DEFAULT_COMPPSITION_OPERATION;
     constructor(layer: Layer, actionData: ActionData) {
         this.layer = layer;
         this.fill = actionData.fill;
@@ -302,13 +304,17 @@ export class LayerAction {
     addToData<T>(data: T) {
         this.data.push(<T>data);
     }
+
+    resetGlobalComposition(canvas: HTMLCanvasElement){
+        canvas.getContext("2d").globalCompositeOperation = this.DEFAULT_COMPPSITION_OPERATION;
+    }
 }
 
 export class FillAction extends LayerAction {
     currentScale: number;
     initialWorldPositionX: number;
     initialWorldPositionY: number;
-    compositionOperation = "source-over";
+
     constructor(layer: Layer, actionData: ActionData) {
         super(layer, actionData);
         let temporaryCanvas = <HTMLCanvasElement>document.createElement("canvas");
@@ -464,14 +470,12 @@ export class FillAction extends LayerAction {
     }
     render(canvas: HTMLCanvasElement, activeDocument: PodDocument) {
 
-        
         let c = this.data[0];
         if(!c) return;
         let offsetByScale = activeDocument.getZoomScale() / this.currentScale;
-        
-
         let utensil = canvas.getContext("2d");
         utensil.globalCompositeOperation = this.compositionOperation;
+        
         utensil.beginPath();
         let p = { x: 0, y: 0 };
         p.x = (c.data32S[c.data32S.length - 2] * offsetByScale) + activeDocument.getWorldPosition().x - this.initialWorldPositionX * offsetByScale;
@@ -504,17 +508,66 @@ export class FillAction extends LayerAction {
 
         }
         utensil.strokeStyle = `rgb(${this.fill.r}, ${this.fill.g}, ${this.fill.b})`;
-        
-        utensil.lineWidth = 4 * offsetByScale;
+        let lineWidth = 4 * offsetByScale;
+        lineWidth = lineWidth < 4? 4: lineWidth;
+        utensil.lineWidth = lineWidth;
         utensil.stroke();
         utensil.fillStyle = `rgb(${this.fill.r}, ${this.fill.g}, ${this.fill.b})`;
         utensil.fill();
+        this.resetGlobalComposition(canvas);
+    }
 
+    renderForFinal(canvas: HTMLCanvasElement, activeDocument: PodDocument) {
+        
+        let c = this.data[0];
+        if(!c) return;
+        let offsetByScale = 1 / activeDocument.getInitialZoomScale();
+        let utensil = canvas.getContext("2d");
+        utensil.globalCompositeOperation = this.compositionOperation;
+        
+        utensil.beginPath();
+        let p = { x: 0, y: 0 };
+        p.x = (c.data32S[c.data32S.length - 2] * offsetByScale);
+        p.y = (c.data32S[c.data32S.length - 1] * offsetByScale);
+        utensil.moveTo(p.x, p.y);
+        for (let j = c.data32S.length - 1; j >= 0; j -= 2) {
+            let p = { x: 0, y: 0 };
+            p.x = (c.data32S[j - 1] * offsetByScale);
+            p.y = (c.data32S[j] * offsetByScale);
+            utensil.lineTo(p.x, p.y);
+
+        }
+        utensil.closePath();
+        for (let k = 1; k < this.data.length; k++) {
+            let outsideContour = this.data[k];
+
+
+            let p = { x: 0, y: 0 };
+            p.x = (outsideContour.data32S[outsideContour.data32S.length - 2] * offsetByScale);
+            p.y = (outsideContour.data32S[outsideContour.data32S.length - 1] * offsetByScale);
+
+            utensil.moveTo(p.x, p.y);
+            for (let j = outsideContour.data32S.length - 1; j >= 0; j -= 2) {
+                let p = { x: 0, y: 0 };
+                p.x = (outsideContour.data32S[j - 1] * offsetByScale);
+                p.y = (outsideContour.data32S[j] * offsetByScale);
+                utensil.lineTo(p.x, p.y);
+            }
+            utensil.closePath();
+
+        }
+        utensil.strokeStyle = `rgb(${this.fill.r}, ${this.fill.g}, ${this.fill.b})`;
+        let lineWidth = 4 * offsetByScale;
+        lineWidth = lineWidth < 4? 4: lineWidth;
+        utensil.lineWidth = lineWidth;
+        utensil.stroke();
+        utensil.fillStyle = `rgb(${this.fill.r}, ${this.fill.g}, ${this.fill.b})`;
+        utensil.fill();
+        this.resetGlobalComposition(canvas);
     }
 }
 
 export class BrushAction extends LayerAction {
-    compositionOperation = "source-over";
     constructor(layer: Layer, actionData: ActionData) {
         super(layer, actionData);
         let activeDocument = this.layer.podDocComp.activePodDocument;
@@ -552,7 +605,7 @@ export class BrushAction extends LayerAction {
 
             utensil.stroke();
         }
-
+        this.resetGlobalComposition(canvas);
     }
 
     renderForFinal(canvas: HTMLCanvasElement, activeDocument: PodDocument) {
@@ -575,6 +628,7 @@ export class BrushAction extends LayerAction {
 
             utensil.stroke();
         }
+        this.resetGlobalComposition(canvas);
     }
 
     onDrawAction(canvas: HTMLCanvasElement, mousePos: Vector2D, activeDocument: PodDocument) {
