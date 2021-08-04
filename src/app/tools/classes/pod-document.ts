@@ -173,6 +173,7 @@ export class Layer {
     actions: LayerAction[] = [];
     podDocComp: PodDocumentComponent;
     snapshotImageSrc: string;
+
     constructor(name: string) {
         this.name = name;
     }
