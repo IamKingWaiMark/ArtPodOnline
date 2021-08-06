@@ -36,7 +36,7 @@ export class PodDocument {
         return layer;
     }
 
-    canDeleteLayer(){
+    canDeleteLayer() {
         return this.layers.length > 1;
     }
     deleteLayer(index: number): boolean {
@@ -128,18 +128,16 @@ export class PodDocument {
         }
     }
 
-    removeUndoAndRedoActionsWithLayerWhenDeleted(layer: Layer){
-        let a = 0;
-        for(let i = 0; i < this.undoActions.length; i++) {
+    removeUndoAndRedoActionsWithLayerWhenDeleted(layer: Layer) {
+        for (let i = 0; i < this.undoActions.length; i++) {
             let actionLayer = this.undoActions[i].getLayer();
-            if(actionLayer == layer) {
+            if (actionLayer == layer) {
                 this.undoActions.splice(i--, 1);
             }
-            console.log(a++);
         }
-        for(let i = 0; i < this.redoActions.length; i++) {
+        for (let i = 0; i < this.redoActions.length; i++) {
             let actionLayer = this.redoActions[i].getLayer();
-            if(actionLayer == layer) {
+            if (actionLayer == layer) {
                 this.redoActions.splice(i--, 1);
             }
         }
@@ -173,7 +171,10 @@ export class Layer {
     actions: LayerAction[] = [];
     podDocComp: PodDocumentComponent;
     snapshotImageSrc: string;
-
+    moveStartTimer: Date;
+    layerOrigin: Vector2D = { x: 0, y: 0 };
+    initialLayerOrigin: Vector2D = { x: 0, y: 0 };
+    initialMousePosition: Vector2D = { x: 0, y: 0 };
     constructor(name: string) {
         this.name = name;
     }
@@ -220,12 +221,27 @@ export class Layer {
                 })
         );
     }
+    addImage(podDocComp: PodDocumentComponent, data: ActionData, addToUndoStack?: boolean) {
+        this.setPodDocComp(podDocComp);
 
-    setBackgroundColor(podDocComp: PodDocumentComponent, data: ActionData, addToUndoStack?: boolean){
+        let action = new ImageFileAction(this, data);
+        this.actions.push(action);
+
+        if (addToUndoStack) {
+            this.podDocComp.activePodDocument.addToUndoActions(
+                new AppAction(AppActionType.DRAW,
+                    <DrawActionData>{
+                        layer: this,
+                        action
+                    })
+            );
+        }
+    }
+    setBackgroundColor(podDocComp: PodDocumentComponent, data: ActionData, addToUndoStack?: boolean) {
         this.setPodDocComp(podDocComp);
         let action = new FillAction(this, data);
         this.actions.push(action);
-        if(addToUndoStack) {
+        if (addToUndoStack) {
             this.podDocComp.activePodDocument.addToUndoActions(
                 new AppAction(AppActionType.DRAW,
                     <DrawActionData>{
@@ -256,11 +272,48 @@ export class Layer {
         this.podDocComp = podDocComp;
     }
 
+    onMoveStart() {
+        this.moveStartTimer = new Date();
+        this.initialLayerOrigin.x = this.layerOrigin.x;
+        this.initialLayerOrigin.y = this.layerOrigin.y;
+        this.initialMousePosition.x = this.podDocComp.GLOBAL_MOUSE_POS.x;
+        this.initialMousePosition.y = this.podDocComp.GLOBAL_MOUSE_POS.y;
+    }
+
+    onMove() {
+        if (this.moveStartTimer == null) return;
+        let activeDocument = this.podDocComp.activePodDocument;
+        let offsetByScale = activeDocument.getZoomScale() / activeDocument.getInitialZoomScale();
+        let nowTime = new Date();
+        let elapsedTime = nowTime.getTime() - this.moveStartTimer.getTime();
+        let mouseDistance = {
+            x: (this.initialMousePosition.x - this.podDocComp.GLOBAL_MOUSE_POS.x) / offsetByScale,
+            y: (this.initialMousePosition.y - this.podDocComp.GLOBAL_MOUSE_POS.y) / offsetByScale
+        };
+        this.layerOrigin.x = this.initialLayerOrigin.x - mouseDistance.x;
+        this.layerOrigin.y = this.initialLayerOrigin.y - mouseDistance.y;
+
+        if (elapsedTime > 24) {
+            this.moveStartTimer = nowTime;
+            this.podDocComp.RENDER_ACTIONS.render(false);
+        }
+    }
+
+    onMoveStop() {
+        this.moveStartTimer = null;
+    }
+
+    getDistanceFromLayerOrigin(){
+        return {
+            x: 0 + this.layerOrigin.x,
+            y: 0 + this.layerOrigin.y
+        }
+    }
 }
 
 
 export class LayerAction {
-    data: any [] = [];
+    data: any[] = [];
     fill: { r: number, g: number, b: number, a?: number } = { r: 0, g: 0, b: 0, a: 1 };
     utensilSize: number;
     startTime: Date;
@@ -270,7 +323,7 @@ export class LayerAction {
     constructor(layer: Layer, actionData: ActionData) {
         this.layer = layer;
         this.fill = actionData.fill;
-        this.fill.a = 1;
+        if (this.fill) this.fill.a = 1;
         this.utensilSize = actionData.utensilSize;
         this.startTime = new Date();
     }
@@ -305,8 +358,40 @@ export class LayerAction {
         this.data.push(<T>data);
     }
 
-    resetGlobalComposition(canvas: HTMLCanvasElement){
+    resetGlobalComposition(canvas: HTMLCanvasElement) {
         canvas.getContext("2d").globalCompositeOperation = this.DEFAULT_COMPPSITION_OPERATION;
+    }
+}
+
+export class ImageFileAction extends LayerAction {
+    htmlImageElement: HTMLImageElement;
+    constructor(layer: Layer, actionData: ActionData) {
+        super(layer, actionData);
+        this.htmlImageElement = actionData.htmlImageElement;
+
+    }
+    render(canvas: HTMLCanvasElement, activeDocument: PodDocument) {
+        let utensil = canvas.getContext("2d");
+
+        let offsetByScale = activeDocument.getZoomScale() / activeDocument.getInitialZoomScale();
+        this.resetGlobalComposition(canvas);
+        utensil.drawImage(
+            this.htmlImageElement,
+            activeDocument.getWorldPosition().x + (this.layer.layerOrigin.x * offsetByScale),
+            activeDocument.getWorldPosition().y + (this.layer.layerOrigin.y * offsetByScale),
+            this.htmlImageElement.width,
+            this.htmlImageElement.height);
+    }
+    renderForFinal(canvas: HTMLCanvasElement, activeDocument: PodDocument) {
+        let offsetByScale = 1 / activeDocument.getInitialZoomScale();
+        let utensil = canvas.getContext("2d");
+        this.resetGlobalComposition(canvas);
+        utensil.drawImage(
+            this.htmlImageElement,
+            this.layer.layerOrigin.x * offsetByScale,
+            this.layer.layerOrigin.y * offsetByScale,
+            this.htmlImageElement.width,
+            this.htmlImageElement.height);
     }
 }
 
@@ -314,9 +399,11 @@ export class FillAction extends LayerAction {
     currentScale: number;
     initialWorldPositionX: number;
     initialWorldPositionY: number;
-
+    distanceFromLayerOrigin: Vector2D;
+    fillZoom: number;
     constructor(layer: Layer, actionData: ActionData) {
         super(layer, actionData);
+        this.fillZoom = layer.podDocComp.activePodDocument.getZoomScale();
         let temporaryCanvas = <HTMLCanvasElement>document.createElement("canvas");
         let drawCanvas = this.layer.podDocComp.RENDER_ACTIONS.getDrawCanvas();
         temporaryCanvas.width = drawCanvas.width;
@@ -325,10 +412,11 @@ export class FillAction extends LayerAction {
         this.currentScale = activeDocument.getZoomScale();
         this.initialWorldPositionX = activeDocument.getWorldPosition().x;
         this.initialWorldPositionY = activeDocument.getWorldPosition().y;
+        this.distanceFromLayerOrigin = this.layer.getDistanceFromLayerOrigin();
         this.turnCanvasToBlackAndWhite(actionData.mousePos.x, actionData.mousePos.y, drawCanvas, temporaryCanvas);
         this.findContours(actionData.mousePos.x, actionData.mousePos.y, drawCanvas, temporaryCanvas);
         this.render(drawCanvas, this.layer.podDocComp.activePodDocument);
-    
+
     }
     turnCanvasToBlackAndWhite(mouseX: number, mouseY: number, drawCanvas: HTMLCanvasElement, temporaryCanvas: HTMLCanvasElement) {
         let drawCanvasDimensions = drawCanvas.getBoundingClientRect();
@@ -339,8 +427,8 @@ export class FillAction extends LayerAction {
         let temporaryCanvasData = temporaryCanvasUtensil.getImageData(0, 0, drawCanvasDimensions.width, drawCanvasDimensions.height);
         let temporaryCanvasDimensions = temporaryCanvas.getBoundingClientRect();
         let color = drawCanvasUtensil.getImageData(
-            mouseX - drawCanvasDimensions.x - temporaryCanvasDimensions.x, 
-            mouseY - drawCanvasDimensions.y - temporaryCanvasDimensions.y, 
+            mouseX - drawCanvasDimensions.x - temporaryCanvasDimensions.x,
+            mouseY - drawCanvasDimensions.y - temporaryCanvasDimensions.y,
             1, 1);
 
         let r = color.data[0];
@@ -431,7 +519,7 @@ export class FillAction extends LayerAction {
                     }
                 }
             }
-           
+
             this.addToData(mainContour);
             for (let k = 0; k < outsideContours.length; k++) {
                 let outsideContour = contours.get(outsideContours[k]);
@@ -447,18 +535,18 @@ export class FillAction extends LayerAction {
                             skip = true;
                             break;
                         }
-                        
+
                     }
                 }
                 if (!skip) {
                     this.addToData(outsideContour);
                 }
-    
+
             }
-    
+
         }
 
-       
+
 
         src.delete();
         contours.delete();
@@ -471,20 +559,21 @@ export class FillAction extends LayerAction {
     render(canvas: HTMLCanvasElement, activeDocument: PodDocument) {
 
         let c = this.data[0];
-        if(!c) return;
+        if (!c) return;
         let offsetByScale = activeDocument.getZoomScale() / this.currentScale;
+        let offsetByDocumentScale = activeDocument.getZoomScale() / activeDocument.getInitialZoomScale();
         let utensil = canvas.getContext("2d");
         utensil.globalCompositeOperation = this.compositionOperation;
-        
+
         utensil.beginPath();
         let p = { x: 0, y: 0 };
-        p.x = (c.data32S[c.data32S.length - 2] * offsetByScale) + activeDocument.getWorldPosition().x - this.initialWorldPositionX * offsetByScale;
-        p.y = (c.data32S[c.data32S.length - 1] * offsetByScale) + activeDocument.getWorldPosition().y - this.initialWorldPositionY * offsetByScale;
+        p.x = ((c.data32S[c.data32S.length - 2] - this.initialWorldPositionX) * offsetByScale) + activeDocument.getWorldPosition().x + (this.layer.layerOrigin.x - this.distanceFromLayerOrigin.x) * offsetByDocumentScale;
+        p.y = ((c.data32S[c.data32S.length - 1] - this.initialWorldPositionY) * offsetByScale) + activeDocument.getWorldPosition().y + (this.layer.layerOrigin.y - this.distanceFromLayerOrigin.y) * offsetByDocumentScale;
         utensil.moveTo(p.x, p.y);
         for (let j = c.data32S.length - 1; j >= 0; j -= 2) {
             let p = { x: 0, y: 0 };
-            p.x = (c.data32S[j - 1] * offsetByScale) + activeDocument.getWorldPosition().x - this.initialWorldPositionX * offsetByScale;
-            p.y = (c.data32S[j] * offsetByScale) + activeDocument.getWorldPosition().y - this.initialWorldPositionY * offsetByScale;
+            p.x = ((c.data32S[j - 1] - this.initialWorldPositionX) * offsetByScale) + activeDocument.getWorldPosition().x + (this.layer.layerOrigin.x - this.distanceFromLayerOrigin.x) * offsetByDocumentScale;
+            p.y = ((c.data32S[j] - this.initialWorldPositionY) * offsetByScale) + activeDocument.getWorldPosition().y + (this.layer.layerOrigin.y - this.distanceFromLayerOrigin.y) * offsetByDocumentScale;
             utensil.lineTo(p.x, p.y);
 
         }
@@ -494,14 +583,14 @@ export class FillAction extends LayerAction {
 
 
             let p = { x: 0, y: 0 };
-            p.x = (outsideContour.data32S[outsideContour.data32S.length - 2] * offsetByScale) + activeDocument.getWorldPosition().x - this.initialWorldPositionX * offsetByScale;
-            p.y = (outsideContour.data32S[outsideContour.data32S.length - 1] * offsetByScale) + activeDocument.getWorldPosition().y - this.initialWorldPositionY * offsetByScale;
+            p.x = ((outsideContour.data32S[outsideContour.data32S.length - 2] - this.initialWorldPositionX) * offsetByScale) + activeDocument.getWorldPosition().x + (this.layer.layerOrigin.x - this.distanceFromLayerOrigin.y) * offsetByDocumentScale;
+            p.y = ((outsideContour.data32S[outsideContour.data32S.length - 1] - this.initialWorldPositionY) * offsetByScale) + activeDocument.getWorldPosition().y + (this.layer.layerOrigin.y - this.distanceFromLayerOrigin.y) * offsetByDocumentScale;
 
             utensil.moveTo(p.x, p.y);
             for (let j = outsideContour.data32S.length - 1; j >= 0; j -= 2) {
                 let p = { x: 0, y: 0 };
-                p.x = (outsideContour.data32S[j - 1] * offsetByScale) + activeDocument.getWorldPosition().x - this.initialWorldPositionX * offsetByScale;
-                p.y = (outsideContour.data32S[j] * offsetByScale) + activeDocument.getWorldPosition().y - this.initialWorldPositionY * offsetByScale;
+                p.x = ((outsideContour.data32S[j - 1] - this.initialWorldPositionX) * offsetByScale) + activeDocument.getWorldPosition().x + (this.layer.layerOrigin.x - this.distanceFromLayerOrigin.x) * offsetByDocumentScale;
+                p.y = ((outsideContour.data32S[j] - this.initialWorldPositionY) * offsetByScale) + activeDocument.getWorldPosition().y + (this.layer.layerOrigin.y - this.distanceFromLayerOrigin.y) * offsetByDocumentScale;
                 utensil.lineTo(p.x, p.y);
             }
             utensil.closePath();
@@ -509,7 +598,7 @@ export class FillAction extends LayerAction {
         }
         utensil.strokeStyle = `rgb(${this.fill.r}, ${this.fill.g}, ${this.fill.b})`;
         let lineWidth = 4 * offsetByScale;
-        lineWidth = lineWidth < 4? 4: lineWidth;
+        lineWidth = lineWidth < 4 ? 4 : lineWidth;
         utensil.lineWidth = lineWidth;
         utensil.stroke();
         utensil.fillStyle = `rgb(${this.fill.r}, ${this.fill.g}, ${this.fill.b})`;
@@ -518,22 +607,23 @@ export class FillAction extends LayerAction {
     }
 
     renderForFinal(canvas: HTMLCanvasElement, activeDocument: PodDocument) {
-        
+
         let c = this.data[0];
-        if(!c) return;
-        let offsetByScale = 1 / activeDocument.getInitialZoomScale();
+        if (!c) return;
+        let offsetByScale = 1 / this.fillZoom;
+        let offsetByDocumentScale = 1 / activeDocument.getInitialZoomScale();
         let utensil = canvas.getContext("2d");
         utensil.globalCompositeOperation = this.compositionOperation;
-        
+
         utensil.beginPath();
         let p = { x: 0, y: 0 };
-        p.x = (c.data32S[c.data32S.length - 2] * offsetByScale);
-        p.y = (c.data32S[c.data32S.length - 1] * offsetByScale);
+        p.x = ((c.data32S[c.data32S.length - 2]) * offsetByScale) + (this.layer.layerOrigin.x - this.distanceFromLayerOrigin.x) * offsetByDocumentScale;
+        p.y = ((c.data32S[c.data32S.length - 1]) * offsetByScale) + (this.layer.layerOrigin.y - this.distanceFromLayerOrigin.y) * offsetByDocumentScale;
         utensil.moveTo(p.x, p.y);
         for (let j = c.data32S.length - 1; j >= 0; j -= 2) {
             let p = { x: 0, y: 0 };
-            p.x = (c.data32S[j - 1] * offsetByScale);
-            p.y = (c.data32S[j] * offsetByScale);
+            p.x = ((c.data32S[j - 1]) * offsetByScale)  + (this.layer.layerOrigin.x - this.distanceFromLayerOrigin.x) * offsetByDocumentScale;
+            p.y = ((c.data32S[j]) * offsetByScale)  + (this.layer.layerOrigin.y - this.distanceFromLayerOrigin.y) * offsetByDocumentScale;
             utensil.lineTo(p.x, p.y);
 
         }
@@ -543,14 +633,14 @@ export class FillAction extends LayerAction {
 
 
             let p = { x: 0, y: 0 };
-            p.x = (outsideContour.data32S[outsideContour.data32S.length - 2] * offsetByScale);
-            p.y = (outsideContour.data32S[outsideContour.data32S.length - 1] * offsetByScale);
+            p.x = ((outsideContour.data32S[outsideContour.data32S.length - 2]) * offsetByScale) + (this.layer.layerOrigin.x - this.distanceFromLayerOrigin.x) * offsetByDocumentScale;
+            p.y = ((outsideContour.data32S[outsideContour.data32S.length - 1]) * offsetByScale) + (this.layer.layerOrigin.y - this.distanceFromLayerOrigin.y) * offsetByDocumentScale;
 
             utensil.moveTo(p.x, p.y);
             for (let j = outsideContour.data32S.length - 1; j >= 0; j -= 2) {
                 let p = { x: 0, y: 0 };
-                p.x = (outsideContour.data32S[j - 1] * offsetByScale);
-                p.y = (outsideContour.data32S[j] * offsetByScale);
+                p.x = ((outsideContour.data32S[j - 1]) * offsetByScale) + (this.layer.layerOrigin.x - this.distanceFromLayerOrigin.x) * offsetByDocumentScale;
+                p.y = ((outsideContour.data32S[j]) * offsetByScale) + (this.layer.layerOrigin.y - this.distanceFromLayerOrigin.y) * offsetByDocumentScale;
                 utensil.lineTo(p.x, p.y);
             }
             utensil.closePath();
@@ -558,7 +648,7 @@ export class FillAction extends LayerAction {
         }
         utensil.strokeStyle = `rgb(${this.fill.r}, ${this.fill.g}, ${this.fill.b})`;
         let lineWidth = 4 * offsetByScale;
-        lineWidth = lineWidth < 4? 4: lineWidth;
+        lineWidth = lineWidth < 4 ? 4 : lineWidth;
         utensil.lineWidth = lineWidth;
         utensil.stroke();
         utensil.fillStyle = `rgb(${this.fill.r}, ${this.fill.g}, ${this.fill.b})`;
@@ -578,8 +668,8 @@ export class BrushAction extends LayerAction {
             y: canvasDimensions.y
         }
         let calculatedMousePos = {
-            x: ((actionData.mousePos.x - lineOffset.x) / offsetByScale) - activeDocument.getWorldPosition().x / offsetByScale,
-            y: ((actionData.mousePos.y - lineOffset.y) / offsetByScale) - activeDocument.getWorldPosition().y / offsetByScale
+            x: ((actionData.mousePos.x - lineOffset.x) / offsetByScale) - activeDocument.getWorldPosition().x / offsetByScale - (this.layer.layerOrigin.x),
+            y: ((actionData.mousePos.y - lineOffset.y) / offsetByScale) - activeDocument.getWorldPosition().y / offsetByScale - (this.layer.layerOrigin.y)
         }
         actionData.mousePos = calculatedMousePos;
         this.addToData(<DrawPoint>actionData);
@@ -597,11 +687,11 @@ export class BrushAction extends LayerAction {
             let lastDrawPoint = this.getDrawPointBefore(i);
             utensil.beginPath();
             utensil.moveTo(
-                (lastDrawPoint.mousePos.x * offsetByScale) + activeDocument.getWorldPosition().x /** offsetByScale*/,
-                (lastDrawPoint.mousePos.y * offsetByScale) + activeDocument.getWorldPosition().y /** offsetByScale*/);
+                ((lastDrawPoint.mousePos.x + this.layer.layerOrigin.x) * offsetByScale) + activeDocument.getWorldPosition().x,
+                ((lastDrawPoint.mousePos.y + this.layer.layerOrigin.y) * offsetByScale) + activeDocument.getWorldPosition().y);
             utensil.lineTo(
-                (drawPoints[i].mousePos.x * offsetByScale) + activeDocument.getWorldPosition().x /** offsetByScale*/,
-                (drawPoints[i].mousePos.y * offsetByScale) + activeDocument.getWorldPosition().y /** offsetByScale*/);
+                ((drawPoints[i].mousePos.x + this.layer.layerOrigin.x) * offsetByScale) + activeDocument.getWorldPosition().x,
+                ((drawPoints[i].mousePos.y + this.layer.layerOrigin.y) * offsetByScale) + activeDocument.getWorldPosition().y);
 
             utensil.stroke();
         }
@@ -620,11 +710,11 @@ export class BrushAction extends LayerAction {
             let lastDrawPoint = this.getDrawPointBefore(i);
             utensil.beginPath();
             utensil.moveTo(
-                (lastDrawPoint.mousePos.x * offsetByScale),
-                (lastDrawPoint.mousePos.y * offsetByScale));
+                ((lastDrawPoint.mousePos.x + this.layer.layerOrigin.x) * offsetByScale),
+                ((lastDrawPoint.mousePos.y + this.layer.layerOrigin.y) * offsetByScale));
             utensil.lineTo(
-                (drawPoints[i].mousePos.x * offsetByScale),
-                (drawPoints[i].mousePos.y * offsetByScale));
+                ((drawPoints[i].mousePos.x + this.layer.layerOrigin.x) * offsetByScale),
+                ((drawPoints[i].mousePos.y + this.layer.layerOrigin.y) * offsetByScale));
 
             utensil.stroke();
         }
@@ -647,15 +737,15 @@ export class BrushAction extends LayerAction {
         let lineOffset = this.getOffset(canvas);
         let offsetByScale = activeDocument.getZoomScale() / activeDocument.getInitialZoomScale();
         utensil.moveTo(
-            (lastDrawPoint.mousePos.x * offsetByScale) + activeDocument.getWorldPosition().x,
-            (lastDrawPoint.mousePos.y * offsetByScale) + activeDocument.getWorldPosition().y);
+            ((lastDrawPoint.mousePos.x + this.layer.layerOrigin.x) * offsetByScale) + activeDocument.getWorldPosition().x,
+            ((lastDrawPoint.mousePos.y + this.layer.layerOrigin.y) * offsetByScale) + activeDocument.getWorldPosition().y);
         utensil.lineTo(
             (currentMousePos.x) - lineOffset.x,
             (currentMousePos.y) - lineOffset.y);
         utensil.stroke();
         let calculatedMousePos = {
-            x: ((currentMousePos.x - lineOffset.x) / offsetByScale) - activeDocument.getWorldPosition().x / offsetByScale,
-            y: ((currentMousePos.y - lineOffset.y) / offsetByScale) - activeDocument.getWorldPosition().y / offsetByScale
+            x: ((currentMousePos.x - lineOffset.x) / offsetByScale) - activeDocument.getWorldPosition().x / offsetByScale - (this.layer.layerOrigin.x),
+            y: ((currentMousePos.y - lineOffset.y) / offsetByScale) - activeDocument.getWorldPosition().y / offsetByScale - (this.layer.layerOrigin.y)
         }
         this.getData().push({ mousePos: calculatedMousePos });
     }
@@ -709,5 +799,6 @@ export interface ActionData {
     fill?: { r: number, g: number, b: number, a?: number }
     mousePos?: Vector2D;
     utensilSize?: number;
+    htmlImageElement?: HTMLImageElement;
 }
 
