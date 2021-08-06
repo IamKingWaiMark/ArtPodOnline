@@ -3,7 +3,8 @@ import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { FeatureInfo } from 'src/app/tools/classes/feature-info';
 import { GlobalEvents, HotKey } from 'src/app/tools/classes/global-events';
-import { PodDocument } from 'src/app/tools/classes/pod-document';
+import { PodDocMetaData, PodDocument } from 'src/app/tools/classes/pod-document';
+import { PodPreset, PresetMetric } from 'src/app/tools/classes/pod-preset';
 import { PodFeature } from 'src/app/tools/enums/pod-feature';
 import { PodEditAction, PodFileAction } from 'src/app/tools/pod-app-tools/pod-app-tools.component';
 import { NewPodWindowAction, NewPodWindowActionData } from 'src/app/windows/new-pod-window/new-pod-window.component';
@@ -16,7 +17,7 @@ import { NewPodWindowAction, NewPodWindowActionData } from 'src/app/windows/new-
 export class PodComponent implements OnInit {
   public readonly GLOBAL_EVENTS = new GlobalEvents();
   public readonly FEATURE_INFO: FeatureInfo = new FeatureInfo();
-
+  private readonly ACCEPTED_DROP_FILES = "(image)\/(jpeg|png)";
   public readonly DEFAULTS = {
     POD_FEATURES: PodFeature.MOVE
   }
@@ -28,6 +29,7 @@ export class PodComponent implements OnInit {
   podDocuments: PodDocument[] = [];
   podDocumentsSubscription = new BehaviorSubject<PodDocument[]>(this.podDocuments);
 
+  droppedImageFileSubscription = new BehaviorSubject<HTMLImageElement>(null);
 
 
   constructor(@Inject(PLATFORM_ID) private platform: Object) { }
@@ -116,12 +118,13 @@ export class PodComponent implements OnInit {
   */
   onNewPodWindowAction(action: NewPodWindowActionData) {
     switch (action.newPodWindowAction) {
-      case NewPodWindowAction.CREATE: this.showNewPodWindow = false; this.createNewDocument(action); break;
+      case NewPodWindowAction.CREATE: this.createNewDocument(action); break;
       case NewPodWindowAction.CLOSE: this.showNewPodWindow = false; break;
     }
   }
 
   createNewDocument(action: NewPodWindowActionData) {
+    this.showNewPodWindow = false;
     this.podDocuments.push(action.podDocument);
     this.podDocumentsSubscription.next(this.podDocuments);
   }
@@ -160,6 +163,61 @@ export class PodComponent implements OnInit {
   /*
     POD TOOL END
   */
+
+
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+  }
+  onDrop(event: DragEvent) {
+    event.preventDefault();
+    let files = event.dataTransfer.files;
+    if(files.length > 0) {
+      let file = files[0];
+      if(file.type.match(this.ACCEPTED_DROP_FILES)) {
+        let fileReader = new FileReader();
+        fileReader.onloadend = (ev) => {
+          let image = new Image();
+          image.src = <string>fileReader.result;
+          image.onload = (ev) => {
+            if(this.podDocuments.length <= 0) {
+              this.createNewImageFileOnDrop(image, file.name);
+            } else {
+              this.droppedImageFileSubscription.next(image);
+            }
+          }
+        }
+        fileReader.readAsDataURL(file);
+      }
+    }
+  }
+
+  createNewImageFileOnDrop(image: HTMLImageElement, nameOfFile: string){
+    let widthInput = image.width;
+    let heightInput = image.height;
+    let ppiInput = 1;
+    let presetData = new PodPreset(
+      {
+        presetSize: null,
+        w: widthInput,
+        h: heightInput,
+        ppi: ppiInput,
+        type: PresetMetric.PIXEL,
+        name: null
+      }
+    );
+
+    
+    this.createNewDocument({
+      newPodWindowAction: NewPodWindowAction.CREATE,
+      podDocument: new PodDocument(
+        <PodDocMetaData> {
+          docName: nameOfFile,
+          podPreset: presetData
+        }
+      )
+    });
+    this.droppedImageFileSubscription.next(image);
+  }
 
 }
 

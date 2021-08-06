@@ -4,7 +4,7 @@ import { BehaviorSubject } from 'rxjs';
 import { FeatureInfo } from '../classes/feature-info';
 import { GlobalEvents, HotKey } from '../classes/global-events';
 import { MouseUtilities } from '../classes/mouse-events-utlility-functions';
-import { Layer, PodDocument } from '../classes/pod-document';
+import { ImageFileAction, Layer, PodDocument } from '../classes/pod-document';
 import { Vector2D } from '../classes/vectors';
 import { PodDocumentState } from '../enums/pod-document-state';
 import { PodFeature } from '../enums/pod-feature';
@@ -26,6 +26,7 @@ import { PodFeature } from '../enums/pod-feature';
 export class PodDocumentComponent implements OnInit {
   @Input() activePodDocumentSubscription: BehaviorSubject<PodDocument>;
   @Input() selectedPodFeatureSubscription: BehaviorSubject<PodFeature>;
+  @Input() droppedImageFileSubscription: BehaviorSubject<HTMLImageElement>;
   @Input() activeLayerSubscription: BehaviorSubject<Layer>;
   @Input() FEATURE_INFO: FeatureInfo;
   @Input() GLOBAL_EVENTS: GlobalEvents;
@@ -64,9 +65,16 @@ export class PodDocumentComponent implements OnInit {
       this.subscribeToGlobalEvents();
       this.subscribeToActivePodDocument();
       this.subscribeToActiveLayer();
+      this.subscribeToDroppedImageFile();
     }
   }
-
+  subscribeToDroppedImageFile() {
+    this.droppedImageFileSubscription.subscribe(
+      htmlImageElement => {
+        this.DOCUMENT_ACTIONS.addImageLayer(htmlImageElement);
+      }
+    )
+  }
   subscribeToActiveLayer() {
     this.activeLayerSubscription.subscribe(
       layer => {
@@ -149,6 +157,7 @@ export class PodDocumentComponent implements OnInit {
           }
         } else {
           switch (this.selectedPodFeature) {
+            case PodFeature.MOVE: this.activePodDocument?.getActiveLayer()?.onMoveStop(); break;
             case PodFeature.ZOOM: this.ZOOM_ACTIONS.stopZooming(); this.RENDER_ACTIONS.render(true); break;
             case PodFeature.BRUSH: this.RENDER_ACTIONS.render(false); break;
             case PodFeature.ERASER: this.RENDER_ACTIONS.render(false); break;
@@ -195,6 +204,9 @@ export class PodDocumentComponent implements OnInit {
             }
           } else {
             switch (this.selectedPodFeature) {
+              case PodFeature.MOVE:
+                this.activePodDocument?.getActiveLayer()?.onMove();
+                break;
               case PodFeature.ZOOM: this.ZOOM_ACTIONS.onMouseMove(); break;
               case PodFeature.BRUSH:
                 if (!this.RENDER_ACTIONS.getShouldEdit()) return;
@@ -218,7 +230,7 @@ export class PodDocumentComponent implements OnInit {
           this.CURSOR_ACTIONS.hideCursor();
           this.ZOOM_ACTIONS.stopZooming();
           this.MOVE_ACTIONS.stopMoving();
-
+          this.activePodDocument?.getActiveLayer()?.onMoveStop();
         }
 
       }
@@ -248,6 +260,9 @@ export class PodDocumentComponent implements OnInit {
       }
     } else {
       switch (this.selectedPodFeature) {
+        case PodFeature.MOVE:
+          this.activePodDocument?.getActiveLayer()?.onMoveStart();
+          break;
         case PodFeature.ZOOM: this.ZOOM_ACTIONS.start(); break;
         case PodFeature.BRUSH:
           if (!this.activePodDocument?.getActiveLayer().visible) return;
@@ -648,6 +663,22 @@ export class PodDocumentActions {
     left = left < 0 ? 0 : left;
     canvasFrameContainer.style.left = `${left}px`;
   }
+
+  addImageLayer(htmlImageElement: HTMLImageElement) {
+    if (this.podDocComp.activePodDocument) {
+      let layer = this.podDocComp.activePodDocument.addLayer(0);
+      this.podDocComp.activePodDocument.setActiveLayer(layer);
+      layer.addImage(
+        this.podDocComp,
+        {
+          htmlImageElement
+        },
+        true
+      );
+      this.podDocComp.activeLayerSubscription.next(layer);
+
+    }
+  }
 }
 
 
@@ -689,13 +720,13 @@ export class RenderActions {
             action.render(effectsCanvas, activeDocument);
           }
           this.getBottomCanvas().getContext("2d").drawImage(effectsCanvas, 0, 0);
-        } else if(i < activeDocument.getActiveLayerIndex()) { // Draw on Top Layer
+        } else if (i < activeDocument.getActiveLayerIndex()) { // Draw on Top Layer
           for (let action of currentLayer.actions) {
             action.render(effectsCanvas, activeDocument);
           }
           this.getTopCanvas().getContext("2d").drawImage(effectsCanvas, 0, 0);
         }
-        
+
       }
     } else {
       let currentLayer = activeDocument.getActiveLayer();
@@ -722,7 +753,7 @@ export class RenderActions {
       canvas.getContext("2d").drawImage(effectsCanvas, 0, 0);
     }
 
-    
+
   }
 
   getCanvasContainer() {

@@ -22,13 +22,15 @@
         </mat-button-toggle-group>
     </div>
 
-    <div id="pod" #pod>
+    <div id="pod" #pod (dragover)="onDragOver($event)" (drop)="onDrop($event)">
         <app-pod-document-controller 
         #podDocumentController
         [GLOBAL_EVENTS]="GLOBAL_EVENTS"
         [FEATURE_INFO]="FEATURE_INFO"
         [selectedPodFeatureSubscription]="selectedPodFeatureSubscription"
-        [podDocumentsSubscription]="podDocumentsSubscription"></app-pod-document-controller>
+        [podDocumentsSubscription]="podDocumentsSubscription"
+        [droppedImageFileSubscription]="droppedImageFileSubscription"
+        ></app-pod-document-controller>
         <app-new-pod-window *ngIf="shouldShowNewPodWindow()" (action)="onNewPodWindowAction($event)" [podDocuments]="podDocuments"></app-new-pod-window>
     </div>
 
