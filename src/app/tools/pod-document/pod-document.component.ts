@@ -28,7 +28,7 @@ import { SaveAsDialogComponent } from '../save-as-dialog/save-as-dialog.componen
 export class PodDocumentComponent implements OnInit {
   @Input() activePodDocumentSubscription: BehaviorSubject<PodDocument>;
   @Input() selectedPodFeatureSubscription: BehaviorSubject<PodFeature>;
-  @Input() droppedImageFileSubscription: BehaviorSubject<HTMLImageElement>;
+  @Input() droppedImageFileSubscription: BehaviorSubject<{image: HTMLImageElement, fileName: string}>;
   @Input() activeLayerSubscription: BehaviorSubject<Layer>;
   @Input() FEATURE_INFO: FeatureInfo;
   @Input() GLOBAL_EVENTS: GlobalEvents;
@@ -75,7 +75,11 @@ export class PodDocumentComponent implements OnInit {
   subscribeToDroppedImageFile() {
     this.droppedImageFileSubscription.subscribe(
       htmlImageElement => {
-        this.DOCUMENT_ACTIONS.addImageLayer(htmlImageElement);
+        if(!htmlImageElement) return;
+        this.DOCUMENT_ACTIONS.addImageLayer(
+          htmlImageElement.image,
+          htmlImageElement.fileName
+        );
       }
     )
   }
@@ -132,7 +136,10 @@ export class PodDocumentComponent implements OnInit {
                   let image = new Image();
                   image.src = <string>fileReader.result;
                   image.onload = (ev) => {
-                    this.droppedImageFileSubscription.next(image);
+                    this.droppedImageFileSubscription.next({
+                      image,
+                      fileName: imageFile.name
+                    });
                   }
                 }
                 fileReader.readAsDataURL(imageFile);
@@ -182,6 +189,25 @@ export class PodDocumentComponent implements OnInit {
       (ev: KeyboardEvent) => {
         this.setState(null);
         this.FIX_X_MOUSE = this.FIX_Y_MOUSE = false;
+        this.activePodDocument?.getActiveLayer()?.onMoveStop();
+      }
+    );
+    this.GLOBAL_EVENTS.GLOBAL_KEYDOWN_EVENT.subscribe(
+      (ev: KeyboardEvent) => {
+        switch (ev.key.toLowerCase()) {
+          case "arrowup":
+            this.activePodDocument?.getActiveLayer()?.onMove({x: 0, y: -1});
+            break;
+          case "arrowdown":
+            this.activePodDocument?.getActiveLayer()?.onMove({x: 0, y: 1});
+            break;
+          case "arrowleft":
+            this.activePodDocument?.getActiveLayer()?.onMove({x: -1, y: 0});
+            break;
+          case "arrowright":
+            this.activePodDocument?.getActiveLayer()?.onMove({x: 1, y: 0});
+            break;
+        }
       }
     );
     this.GLOBAL_EVENTS.GLOBAL_MOUSE_UP_EVENT.subscribe(
@@ -324,6 +350,7 @@ export class PodDocumentComponent implements OnInit {
               mousePos: { x: this.GLOBAL_MOUSE_POS.x, y: this.GLOBAL_MOUSE_POS.y },
               fill: this.FEATURE_INFO.getBrushColor()
             });
+            this.RENDER_ACTIONS.render(false);
           break;
         case PodFeature.ERASER:
           this.RENDER_ACTIONS.setShouldEdit(true);
@@ -700,9 +727,10 @@ export class PodDocumentActions {
     canvasFrameContainer.style.left = `${left}px`;
   }
 
-  addImageLayer(htmlImageElement: HTMLImageElement) {
+  addImageLayer(htmlImageElement: HTMLImageElement, fileName: string) {
     if (this.podDocComp.activePodDocument) {
       let layer = this.podDocComp.activePodDocument.addLayer(0);
+      layer.name = fileName;
       this.podDocComp.activePodDocument.setActiveLayer(layer);
       layer.addImage(
         this.podDocComp,
@@ -783,7 +811,7 @@ export class RenderActions {
     for (let i = activeDocument.getLayers().length - 1; i >= 0; i--) {
       this.clearCanvas(effectsCanvas);
       let currentLayer = activeDocument.getLayers()[i];
-      if(!currentLayer.visible) continue;
+      if (!currentLayer.visible) continue;
       for (let action of currentLayer.actions) {
         action.renderForFinal(effectsCanvas, activeDocument);
       }
