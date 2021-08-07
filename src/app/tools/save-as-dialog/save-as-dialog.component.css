@@ -1,0 +1,19 @@
+::ng-deep.mat-dialog-container {
+    padding: 0px;
+}
+
+.save-as-dialog {
+    padding: 2em;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    row-gap: 1em;
+    column-gap: 1em;
+    background-color: var(--primary-color-accent);
+}
+
+.save-as-dialog button {
+    width: 10em;
+    height: 3em;
+    padding: .5em 1em;
+}
+

@@ -24,6 +24,7 @@ export class PodDocument {
 
     private undoActions: AppAction[] = [];
     private redoActions: AppAction[] = [];
+    
     constructor(metaData: PodDocMetaData) {
         this.metaData = metaData;
         this.setWorldPosition({ x: 0, y: 0 });
@@ -273,6 +274,7 @@ export class Layer {
     }
 
     onMoveStart() {
+        if(!this.podDocComp) return;
         this.moveStartTimer = new Date();
         this.initialLayerOrigin.x = this.layerOrigin.x;
         this.initialLayerOrigin.y = this.layerOrigin.y;
@@ -293,7 +295,7 @@ export class Layer {
         this.layerOrigin.x = this.initialLayerOrigin.x - mouseDistance.x;
         this.layerOrigin.y = this.initialLayerOrigin.y - mouseDistance.y;
 
-        if (elapsedTime > 24) {
+        if (elapsedTime > 34) {
             this.moveStartTimer = nowTime;
             this.podDocComp.RENDER_ACTIONS.render(false);
         }

@@ -1,13 +1,15 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Component, Inject, Input, OnInit, PLATFORM_ID } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { BehaviorSubject } from 'rxjs';
 import { FeatureInfo } from '../classes/feature-info';
 import { GlobalEvents, HotKey } from '../classes/global-events';
 import { MouseUtilities } from '../classes/mouse-events-utlility-functions';
-import { ImageFileAction, Layer, PodDocument } from '../classes/pod-document';
+import { Layer, PodDocument } from '../classes/pod-document';
 import { Vector2D } from '../classes/vectors';
 import { PodDocumentState } from '../enums/pod-document-state';
 import { PodFeature } from '../enums/pod-feature';
+import { SaveAsDialogComponent } from '../save-as-dialog/save-as-dialog.component';
 /**             Canvas Container
  * ------------------------------------------------------
  * |            Canvas Frame                            |
@@ -47,8 +49,10 @@ export class PodDocumentComponent implements OnInit {
   previousState: PodDocumentState = null;
   selectedPodFeature: PodFeature = null;
   activePodDocument: PodDocument = null;
+  saving = false;
 
-  constructor(@Inject(PLATFORM_ID) private platform: Object) { }
+
+  constructor(@Inject(PLATFORM_ID) private platform: Object, private saveAsDialog: MatDialog) { }
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platform)) {
@@ -115,8 +119,40 @@ export class PodDocumentComponent implements OnInit {
       (hotKey: HotKey) => {
 
         switch (hotKey) {
+          case HotKey.ADD_IMAGE:
+            if (!this.activePodDocument) return;
+            let addImageInput = <HTMLInputElement>document.createElement("input");
+            addImageInput.type = "file";
+            addImageInput.accept = "image/*";
+            addImageInput.addEventListener("change", (ev: Event) => {
+              let imageFile = addImageInput.files[0];
+              if (imageFile.type.match("(image)\/(jpeg|png)")) {
+                let fileReader = new FileReader();
+                fileReader.onloadend = (ev) => {
+                  let image = new Image();
+                  image.src = <string>fileReader.result;
+                  image.onload = (ev) => {
+                    this.droppedImageFileSubscription.next(image);
+                  }
+                }
+                fileReader.readAsDataURL(imageFile);
+              }
+            });
+            addImageInput.click();
+            break;
           case HotKey.SAVE_AS:
-            this.SAVE_ACTIONS.saveDocumentTo("png");
+            if (!this.activePodDocument) return;
+            this.saving = true;
+            this.saveAsDialog.open(
+              SaveAsDialogComponent,
+              {
+                data: this.SAVE_ACTIONS,
+                disableClose: true
+              }
+            ).afterClosed().subscribe(data => {
+              this.saving = false;
+            });
+
             break;
           case HotKey.MOVE_POD_DCOUMENT:
             if (this.RENDER_ACTIONS.getShouldEdit()) return;
@@ -170,7 +206,7 @@ export class PodDocumentComponent implements OnInit {
         this.GLOBAL_MOUSE_POS.x = ev.x;
         this.GLOBAL_MOUSE_POS.y = ev.y;
         this.fixMousePos();
-        if (this.mouseIsIn() && this.activePodDocument) {
+        if (this.mouseIsIn() && this.activePodDocument && !this.saving) {
           switch (ev.button) {
             case 0: this.onMouseDown_leftClick(); break;
             case 2: this.onMouseDown_RightClick(); break;
@@ -747,6 +783,7 @@ export class RenderActions {
     for (let i = activeDocument.getLayers().length - 1; i >= 0; i--) {
       this.clearCanvas(effectsCanvas);
       let currentLayer = activeDocument.getLayers()[i];
+      if(!currentLayer.visible) continue;
       for (let action of currentLayer.actions) {
         action.renderForFinal(effectsCanvas, activeDocument);
       }

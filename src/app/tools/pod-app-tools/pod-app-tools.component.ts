@@ -53,7 +53,7 @@ export class PodAppToolsComponent implements OnInit {
   }
 
 
-  onColorSchemeClick(){
+  onColorSchemeClick() {
     this.activePodTool = ActivePodTool.THEME;
   }
 
@@ -89,6 +89,9 @@ export class PodAppToolsComponent implements OnInit {
       case "import":
         this.FILE_ACTIONS.emit(PodFileAction.IMPORT);
         break;
+      case "add_image":
+        this.FILE_ACTIONS.emit(PodFileAction.ADD_IMAGE);
+        break;
     }
     this.activePodTool = null;
   }
@@ -105,29 +108,29 @@ export class PodAppToolsComponent implements OnInit {
     this.activePodTool = null;
   }
 
-  onDarkColorSchemeClick(){
+  onDarkColorSchemeClick() {
     this.removeSchemes();
     document.body.classList.add("dark-mode");
     this.activePodTool = null;
     this.colorScheme = ColorScheme.DARK;
   }
 
-  onLightColorSchemeClick(){
+  onLightColorSchemeClick() {
     this.removeSchemes();
     document.body.classList.add("light-mode");
     this.activePodTool = null;
     this.colorScheme = ColorScheme.LIGHT;
   }
 
-  removeSchemes(){
+  removeSchemes() {
     document.body.classList.remove("dark-mode");
     document.body.classList.remove("light-mode");
   }
 
-  isDarkTheme(){
+  isDarkTheme() {
     return this.colorScheme == ColorScheme.DARK;
   }
-  isLightTheme(){
+  isLightTheme() {
     return this.colorScheme == ColorScheme.LIGHT;
   }
 
@@ -146,7 +149,8 @@ export enum ActivePodTool {
 export enum PodFileAction {
   NEW,
   SAVE_AS,
-  IMPORT
+  IMPORT,
+  ADD_IMAGE
 }
 
 export enum PodEditAction {
