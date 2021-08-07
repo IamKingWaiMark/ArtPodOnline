@@ -147,6 +147,12 @@ export class PodComponent implements OnInit {
       case PodFileAction.SAVE_AS:
         this.GLOBAL_EVENTS.GLOBAL_HOT_KEY_EVENT.emit(HotKey.SAVE_AS);
         break;
+      case PodFileAction.IMPORT:
+        this.GLOBAL_EVENTS.GLOBAL_HOT_KEY_EVENT.emit(HotKey.IMPORT);
+        break;
+      case PodFileAction.ADD_IMAGE:
+        this.GLOBAL_EVENTS.GLOBAL_HOT_KEY_EVENT.emit(HotKey.ADD_IMAGE);
+        break;
     }
   }
 
@@ -171,15 +177,15 @@ export class PodComponent implements OnInit {
   onDrop(event: DragEvent) {
     event.preventDefault();
     let files = event.dataTransfer.files;
-    if(files.length > 0) {
+    if (files.length > 0) {
       let file = files[0];
-      if(file.type.match(this.ACCEPTED_DROP_FILES)) {
+      if (file.type.match(this.ACCEPTED_DROP_FILES)) {
         let fileReader = new FileReader();
         fileReader.onloadend = (ev) => {
           let image = new Image();
           image.src = <string>fileReader.result;
           image.onload = (ev) => {
-            if(this.podDocuments.length <= 0) {
+            if (this.podDocuments.length <= 0) {
               this.createNewImageFileOnDrop(image, file.name);
             } else {
               this.droppedImageFileSubscription.next(image);
@@ -191,7 +197,7 @@ export class PodComponent implements OnInit {
     }
   }
 
-  createNewImageFileOnDrop(image: HTMLImageElement, nameOfFile: string){
+  createNewImageFileOnDrop(image: HTMLImageElement, nameOfFile: string) {
     let widthInput = image.width;
     let heightInput = image.height;
     let ppiInput = 1;
@@ -206,11 +212,11 @@ export class PodComponent implements OnInit {
       }
     );
 
-    
+
     this.createNewDocument({
       newPodWindowAction: NewPodWindowAction.CREATE,
       podDocument: new PodDocument(
-        <PodDocMetaData> {
+        <PodDocMetaData>{
           docName: nameOfFile,
           podPreset: presetData
         }

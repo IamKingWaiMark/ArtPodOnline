@@ -8,6 +8,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { PodFeatureContextMenuComponent } from './tools/pod-feature-context-menu/pod-feature-context-menu.component';
 import { MatSliderModule } from '@angular/material/slider';
+import { MatDialogModule } from '@angular/material/dialog';
 import { ColorPickerComponent } from './windows/color-picker/color-picker.component';
 import { NewPodWindowComponent } from './windows/new-pod-window/new-pod-window.component';
 import { PodPresetComponent } from './tools/pod-preset/pod-preset.component';
@@ -36,7 +37,8 @@ import { LayersWindowLayersTabComponent } from './tools/layers-window-layers-tab
     AppRoutingModule,
     BrowserAnimationsModule,
     MatButtonToggleModule,
-    MatSliderModule
+    MatSliderModule,
+    MatDialogModule
   ],
   providers: [],
   bootstrap: [AppComponent]
