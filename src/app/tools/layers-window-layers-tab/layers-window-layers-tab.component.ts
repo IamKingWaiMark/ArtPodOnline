@@ -1,3 +1,4 @@
+import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { isPlatformBrowser } from '@angular/common';
 import { Component, HostListener, Inject, Input, OnInit, PLATFORM_ID } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
@@ -14,8 +15,7 @@ export class LayersWindowLayersTabComponent implements OnInit {
   @Input() activeLayerSubscription: BehaviorSubject<Layer>;
   @Input() GLOBAL_EVENTS: GlobalEvents;
   activePodDocument: PodDocument;
-  dragging = false;
-  selectedLayer: Layer;
+
   constructor(@Inject(PLATFORM_ID) private platform: Object) { }
 
   ngOnInit(): void {
@@ -30,12 +30,6 @@ export class LayersWindowLayersTabComponent implements OnInit {
     this.GLOBAL_EVENTS.GLOBAL_MOUSE_MOVE_EVENT.subscribe(
       ev => {
         
-      }
-    );
-    this.GLOBAL_EVENTS.GLOBAL_MOUSE_UP_EVENT.subscribe(
-      ev => {
-        this.dragging = false;
-
       }
     );
 
@@ -89,28 +83,9 @@ export class LayersWindowLayersTabComponent implements OnInit {
     this.activeLayerSubscription.next(layer);
   }
 
-  onLayerDragIconClick(layer: Layer){
-    this.dragging = true;
-    this.selectedLayer = layer;
-  }
   onToggleLayerVisibilityClick(layer: Layer) {
     layer.toggleVisibility();
     this.activeLayerSubscription.next(layer);
-  }
-
-  onLayerMouseUp(layer: Layer){
-    if(layer == this.selectedLayer || !this.dragging) return;
-    let newLayerIndex = this.activePodDocument.getLayers().indexOf(layer);
-    let oldLayerIndex = this.activePodDocument.getLayers().indexOf(this.selectedLayer);
-    if(newLayerIndex > oldLayerIndex) {
-      this.activePodDocument.getLayers().splice(newLayerIndex + 1, 0, this.selectedLayer);
-      this.activePodDocument.getLayers().splice(oldLayerIndex, 1);
-    } else {
-      this.activePodDocument.getLayers().splice(newLayerIndex + 1, 0, this.selectedLayer);
-      this.activePodDocument.getLayers().splice(oldLayerIndex + 1, 1);
-    }
-    
-    this.activeLayerSubscription.next(this.activePodDocument.getActiveLayer());
   }
 
 
@@ -119,6 +94,10 @@ export class LayersWindowLayersTabComponent implements OnInit {
     name = (!name && name.length > 0)? name: layer.name;
     layer.name = name;
   }
+  onLayerDrop(event: CdkDragDrop<Layer[]>) {
 
+    moveItemInArray(this.activePodDocument.getLayers(), event.previousIndex, event.currentIndex);
+    this.activeLayerSubscription.next(this.activePodDocument.getLayers()[event.currentIndex]);
+  }
 
 }

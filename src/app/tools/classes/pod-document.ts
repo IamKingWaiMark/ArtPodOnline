@@ -24,7 +24,7 @@ export class PodDocument {
 
     private undoActions: AppAction[] = [];
     private redoActions: AppAction[] = [];
-    
+
     constructor(metaData: PodDocMetaData) {
         this.metaData = metaData;
         this.setWorldPosition({ x: 0, y: 0 });
@@ -176,6 +176,7 @@ export class Layer {
     layerOrigin: Vector2D = { x: 0, y: 0 };
     initialLayerOrigin: Vector2D = { x: 0, y: 0 };
     initialMousePosition: Vector2D = { x: 0, y: 0 };
+    movingWithKeyboard = false;
     constructor(name: string) {
         this.name = name;
     }
@@ -274,7 +275,7 @@ export class Layer {
     }
 
     onMoveStart() {
-        if(!this.podDocComp) return;
+        if (!this.podDocComp) return;
         this.moveStartTimer = new Date();
         this.initialLayerOrigin.x = this.layerOrigin.x;
         this.initialLayerOrigin.y = this.layerOrigin.y;
@@ -282,30 +283,48 @@ export class Layer {
         this.initialMousePosition.y = this.podDocComp.GLOBAL_MOUSE_POS.y;
     }
 
-    onMove() {
+    onMove(pixel?: Vector2D) {
+        if (pixel && this.movingWithKeyboard == false) {
+            this.moveStartTimer = new Date();
+            this.movingWithKeyboard = true;
+            this.layerOrigin.x += pixel.x;
+            this.layerOrigin.y += pixel.y;
+            this.podDocComp.RENDER_ACTIONS.render(false);
+        }
         if (this.moveStartTimer == null) return;
-        let activeDocument = this.podDocComp.activePodDocument;
-        let offsetByScale = activeDocument.getZoomScale() / activeDocument.getInitialZoomScale();
         let nowTime = new Date();
         let elapsedTime = nowTime.getTime() - this.moveStartTimer.getTime();
-        let mouseDistance = {
-            x: (this.initialMousePosition.x - this.podDocComp.GLOBAL_MOUSE_POS.x) / offsetByScale,
-            y: (this.initialMousePosition.y - this.podDocComp.GLOBAL_MOUSE_POS.y) / offsetByScale
-        };
-        this.layerOrigin.x = this.initialLayerOrigin.x - mouseDistance.x;
-        this.layerOrigin.y = this.initialLayerOrigin.y - mouseDistance.y;
+        if (pixel) {
 
-        if (elapsedTime > 34) {
-            this.moveStartTimer = nowTime;
-            this.podDocComp.RENDER_ACTIONS.render(false);
+            if (elapsedTime > 100) {
+                this.layerOrigin.x += pixel.x;
+                this.layerOrigin.y += pixel.y;
+                this.moveStartTimer = nowTime;
+                this.podDocComp.RENDER_ACTIONS.render(false);
+            }
+        } else if (!this.movingWithKeyboard) {
+            let activeDocument = this.podDocComp.activePodDocument;
+            let offsetByScale = activeDocument.getZoomScale() / activeDocument.getInitialZoomScale();
+
+            let mouseDistance = {
+                x: (this.initialMousePosition.x - this.podDocComp.GLOBAL_MOUSE_POS.x) / offsetByScale,
+                y: (this.initialMousePosition.y - this.podDocComp.GLOBAL_MOUSE_POS.y) / offsetByScale
+            };
+            this.layerOrigin.x = this.initialLayerOrigin.x - mouseDistance.x;
+            this.layerOrigin.y = this.initialLayerOrigin.y - mouseDistance.y;
+            if (elapsedTime > 34) {
+                this.moveStartTimer = nowTime;
+                this.podDocComp.RENDER_ACTIONS.render(false);
+            }
         }
     }
 
     onMoveStop() {
         this.moveStartTimer = null;
+        this.movingWithKeyboard = false;
     }
 
-    getDistanceFromLayerOrigin(){
+    getDistanceFromLayerOrigin() {
         return {
             x: 0 + this.layerOrigin.x,
             y: 0 + this.layerOrigin.y
@@ -367,10 +386,19 @@ export class LayerAction {
 
 export class ImageFileAction extends LayerAction {
     htmlImageElement: HTMLImageElement;
+    imageScale: Vector2D = { x: 1, y: 1 };
     constructor(layer: Layer, actionData: ActionData) {
         super(layer, actionData);
         this.htmlImageElement = actionData.htmlImageElement;
-
+        let documentWidth = layer.podDocComp.activePodDocument.getWidth();
+        let documentHeight = layer.podDocComp.activePodDocument.getHeight();
+        let imageWidth = this.htmlImageElement.width;
+        let imageHeight = this.htmlImageElement.height;
+        this.imageScale = {
+            x: imageWidth / documentWidth,
+            y: imageWidth / documentWidth
+        };
+        this.imageScale.x = this.imageScale.y = imageWidth / documentWidth < 1 ? 1 : imageWidth / documentWidth;
     }
     render(canvas: HTMLCanvasElement, activeDocument: PodDocument) {
         let utensil = canvas.getContext("2d");
@@ -381,8 +409,8 @@ export class ImageFileAction extends LayerAction {
             this.htmlImageElement,
             activeDocument.getWorldPosition().x + (this.layer.layerOrigin.x * offsetByScale),
             activeDocument.getWorldPosition().y + (this.layer.layerOrigin.y * offsetByScale),
-            this.htmlImageElement.width,
-            this.htmlImageElement.height);
+            this.htmlImageElement.width * activeDocument.getZoomScale() + 1,
+            this.htmlImageElement.height * activeDocument.getZoomScale() + 1);
     }
     renderForFinal(canvas: HTMLCanvasElement, activeDocument: PodDocument) {
         let offsetByScale = 1 / activeDocument.getInitialZoomScale();
@@ -417,7 +445,7 @@ export class FillAction extends LayerAction {
         this.distanceFromLayerOrigin = this.layer.getDistanceFromLayerOrigin();
         this.turnCanvasToBlackAndWhite(actionData.mousePos.x, actionData.mousePos.y, drawCanvas, temporaryCanvas);
         this.findContours(actionData.mousePos.x, actionData.mousePos.y, drawCanvas, temporaryCanvas);
-        this.render(drawCanvas, this.layer.podDocComp.activePodDocument);
+        //this.render(drawCanvas, this.layer.podDocComp.activePodDocument);
 
     }
     turnCanvasToBlackAndWhite(mouseX: number, mouseY: number, drawCanvas: HTMLCanvasElement, temporaryCanvas: HTMLCanvasElement) {
@@ -624,8 +652,8 @@ export class FillAction extends LayerAction {
         utensil.moveTo(p.x, p.y);
         for (let j = c.data32S.length - 1; j >= 0; j -= 2) {
             let p = { x: 0, y: 0 };
-            p.x = ((c.data32S[j - 1]) * offsetByScale)  + (this.layer.layerOrigin.x - this.distanceFromLayerOrigin.x) * offsetByDocumentScale;
-            p.y = ((c.data32S[j]) * offsetByScale)  + (this.layer.layerOrigin.y - this.distanceFromLayerOrigin.y) * offsetByDocumentScale;
+            p.x = ((c.data32S[j - 1]) * offsetByScale) + (this.layer.layerOrigin.x - this.distanceFromLayerOrigin.x) * offsetByDocumentScale;
+            p.y = ((c.data32S[j]) * offsetByScale) + (this.layer.layerOrigin.y - this.distanceFromLayerOrigin.y) * offsetByDocumentScale;
             utensil.lineTo(p.x, p.y);
 
         }

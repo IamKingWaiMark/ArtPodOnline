@@ -29,7 +29,7 @@ export class PodComponent implements OnInit {
   podDocuments: PodDocument[] = [];
   podDocumentsSubscription = new BehaviorSubject<PodDocument[]>(this.podDocuments);
 
-  droppedImageFileSubscription = new BehaviorSubject<HTMLImageElement>(null);
+  droppedImageFileSubscription = new BehaviorSubject<{image: HTMLImageElement, fileName: string}>(null);
 
 
   constructor(@Inject(PLATFORM_ID) private platform: Object) { }
@@ -188,7 +188,12 @@ export class PodComponent implements OnInit {
             if (this.podDocuments.length <= 0) {
               this.createNewImageFileOnDrop(image, file.name);
             } else {
-              this.droppedImageFileSubscription.next(image);
+              this.droppedImageFileSubscription.next(
+                {
+                  image: image,
+                  fileName: file.name
+                }
+              );
             }
           }
         }
@@ -222,7 +227,10 @@ export class PodComponent implements OnInit {
         }
       )
     });
-    this.droppedImageFileSubscription.next(image);
+    this.droppedImageFileSubscription.next({
+      image,
+      fileName: nameOfFile
+    });
   }
 
 }

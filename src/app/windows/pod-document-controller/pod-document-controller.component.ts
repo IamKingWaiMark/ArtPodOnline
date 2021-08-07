@@ -14,7 +14,7 @@ import { PodFeature } from 'src/app/tools/enums/pod-feature';
 export class PodDocumentControllerComponent implements OnInit {
   @Input() podDocumentsSubscription: BehaviorSubject<PodDocument[]>;
   @Input() selectedPodFeatureSubscription: BehaviorSubject<PodFeature>;
-  @Input() droppedImageFileSubscription: BehaviorSubject<HTMLImageElement>;
+  @Input() droppedImageFileSubscription: BehaviorSubject<{image: HTMLImageElement, fileName: string}>;
   @Input() FEATURE_INFO: FeatureInfo;
   @Input() GLOBAL_EVENTS: GlobalEvents;
   

@@ -6,9 +6,9 @@
     <div class="layers-tab-toolbar"></div>
 
     <div class="layers-tab-layer-section">
-        <div class="layers-tab-layer-section-container">
-            <div [ngClass]="{'layer': true, 'active-layer': isActiveLayer(layer), 'layer-dragging': dragging}"
-                *ngFor="let layer of activePodDocument?.getLayers(); index as i;" (mouseup)="onLayerMouseUp(layer)">
+        <div cdkDropList (cdkDropListDropped)="onLayerDrop($event)" class="layers-tab-layer-section-container">
+            <div cdkDrag [ngClass]="{'layer': true, 'active-layer': isActiveLayer(layer), 'layer-dragging': dragging}"
+                *ngFor="let layer of activePodDocument?.getLayers(); index as i;">
 
                 <div class="layer-icon-container" (click)="onToggleLayerVisibilityClick(layer)">
                     <img [src]="layer?.getVisibilityIconSrc()" width="16" height="16" draggable="false">
@@ -19,9 +19,6 @@
                 </div>
                 <div class="layer-name-container" (click)="onLayerClick(layer)">
                     <input #layerNameInput [value]="layer.name" draggable="false" (keyup)="onLayerNameInputTyped(layer, layerNameInput)"/>
-                </div>
-                <div class="layer-dragger-container" (mousedown)="onLayerDragIconClick(layer)">
-                    <img src="assets/icons/layer_dragger.png" draggable="false">
                 </div>
             </div>
 
