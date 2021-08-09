@@ -19,6 +19,10 @@
     overflow: hidden;
 }
 
+.tab-bar-tab-container {
+    display: flex;
+}
+
 .tab-bar-tab-container .tab {
     max-width: 20em;
     display: grid;

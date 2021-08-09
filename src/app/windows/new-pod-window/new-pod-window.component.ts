@@ -1,7 +1,7 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Component, EventEmitter, Inject, Input, OnInit, Output, PLATFORM_ID } from '@angular/core';
 import { PodDocMetaData, PodDocument } from 'src/app/tools/classes/pod-document';
-import { PodPreset, PresetMetric, PresetSize } from 'src/app/tools/classes/pod-preset';
+import { BackgroundColor, PodPreset, PresetMetric, PresetSize } from 'src/app/tools/classes/pod-preset';
 
 @Component({
   selector: 'app-new-pod-window',
@@ -133,7 +133,7 @@ export class NewPodWindowComponent implements OnInit {
   maxDimensions = 5000;
   maxPPI = this.MAX_PIXELS_PER_INCH;
   selectedMetrics: PresetMetric = PresetMetric.PIXEL;
- 
+  selectedBackgroundColor: BackgroundColor = BackgroundColor.WHITE;
   constructor(@Inject(PLATFORM_ID) private platform: Object) { }
 
   ngOnInit(): void {
@@ -179,7 +179,8 @@ export class NewPodWindowComponent implements OnInit {
 
     return <PodDocMetaData> {
       docName: nameInout.value,
-      podPreset: presetData
+      podPreset: presetData,
+      backgroundColor: this.selectedBackgroundColor
     };
   } 
 
@@ -190,7 +191,13 @@ export class NewPodWindowComponent implements OnInit {
     }
     return PresetMetric.PIXEL;
   }
-
+  backgroundSelectValueToBackgroundColor(metrics: string): BackgroundColor{
+    switch(metrics) {
+      case "white": return BackgroundColor.WHITE;
+      case "black": return BackgroundColor.BLACK;
+    }
+    return BackgroundColor.WHITE;
+  }
   onCreateClick(){
     this.action.emit({
       newPodWindowAction: NewPodWindowAction.CREATE,
@@ -228,6 +235,21 @@ export class NewPodWindowComponent implements OnInit {
         this.clampPPIAndDimensionsForInches();
         break;
     }
+  }
+
+  onBackgroundColorClick(){
+    let backgroundSelector = <HTMLSelectElement> document.getElementById("pod-window-background-select");
+
+    if(!backgroundSelector || backgroundSelector.value.length < 0) return;
+    this.selectedBackgroundColor = this.backgroundSelectValueToBackgroundColor(backgroundSelector.value);
+    switch(this.selectedBackgroundColor) {
+      case BackgroundColor.WHITE:
+        break;
+      case BackgroundColor.WHITE:
+        break;
+    }
+
+
   }
   clampPPIAndDimensionsForPixels() {
     let widthInput = <HTMLInputElement> document.getElementById("pod-window-width-input");
