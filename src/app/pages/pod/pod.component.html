@@ -30,6 +30,7 @@
         [selectedPodFeatureSubscription]="selectedPodFeatureSubscription"
         [podDocumentsSubscription]="podDocumentsSubscription"
         [droppedImageFileSubscription]="droppedImageFileSubscription"
+        [showNewPodWindow]="showNewPodWindow"
         ></app-pod-document-controller>
         <app-new-pod-window *ngIf="shouldShowNewPodWindow()" (action)="onNewPodWindowAction($event)" [podDocuments]="podDocuments"></app-new-pod-window>
     </div>

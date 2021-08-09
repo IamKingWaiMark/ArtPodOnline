@@ -50,3 +50,8 @@ export enum PresetMetric {
     PIXEL = "px",
     INCHES = "in"
 }
+
+export enum BackgroundColor {
+    WHITE = "white",
+    BLACK = "black"
+}

@@ -29,7 +29,18 @@
 
         <div class="label"><span>Pixels/Inch</span></div>
         <span></span>
+        
         <input [disabled]="shouldNotDisplayPPIInput()" (change)="onMetricsClick()" id="pod-window-ppi-input" class="themed-input" type="number" min="1" max="maxPPI" value="1">
+        <span></span>
+        
+        <div class="label" id="pod-window-background-select-label"><span>Background Color</span></div>
+        <select id="pod-window-background-select" class="themed-input" name="pod-window-background-select"
+            (click)="onBackgroundColorClick()">
+            <option value="white">White</option>
+            <option value="black">Black</option>
+        </select>
+
+    
     </div>
     <div id="pod-window-box-3">
 

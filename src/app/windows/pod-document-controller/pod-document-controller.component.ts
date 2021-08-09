@@ -1,3 +1,4 @@
+import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { isPlatformBrowser } from '@angular/common';
 import { Component, Inject, Input, OnInit, PLATFORM_ID } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
@@ -17,7 +18,7 @@ export class PodDocumentControllerComponent implements OnInit {
   @Input() droppedImageFileSubscription: BehaviorSubject<{image: HTMLImageElement, fileName: string}>;
   @Input() FEATURE_INFO: FeatureInfo;
   @Input() GLOBAL_EVENTS: GlobalEvents;
-  
+  @Input() showNewPodWindow: boolean;
   podDocuments: PodDocument [];
   activeTabIndex = 0;
   activePodDocumentSubscription = new BehaviorSubject<PodDocument>(null);
@@ -66,7 +67,11 @@ export class PodDocumentControllerComponent implements OnInit {
     return this.podDocuments[this.activeTabIndex];
   }
 
-
+  onTabDrop(event: CdkDragDrop<PodDocument[]>) {
+    moveItemInArray(event.container.data, event.previousIndex, event.currentIndex)
+    this.activeTabIndex = event.currentIndex;
+    this.activePodDocumentSubscription.next(this.getCurrentPodDocument());
+  }
 
 }
 

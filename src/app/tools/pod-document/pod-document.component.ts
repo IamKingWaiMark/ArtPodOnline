@@ -32,6 +32,7 @@ export class PodDocumentComponent implements OnInit {
   @Input() activeLayerSubscription: BehaviorSubject<Layer>;
   @Input() FEATURE_INFO: FeatureInfo;
   @Input() GLOBAL_EVENTS: GlobalEvents;
+  @Input() showNewPodWindow: boolean;
 
   CURSOR_ACTIONS: CursorActions = null;
   DOCUMENT_ACTIONS: PodDocumentActions = null;
@@ -229,6 +230,7 @@ export class PodDocumentComponent implements OnInit {
     );
     this.GLOBAL_EVENTS.GLOBAL_MOUSE_DOWN_EVENT.subscribe(
       (ev: MouseEvent) => {
+        if(this.showNewPodWindow) return;
         this.GLOBAL_MOUSE_POS.x = ev.x;
         this.GLOBAL_MOUSE_POS.y = ev.y;
         this.fixMousePos();
@@ -643,7 +645,7 @@ export class PodDocumentActions {
         this.podDocComp,
         {
           mousePos: { x: drawCanvasDimensions.x + 1, y: drawCanvasDimensions.y + 1 },
-          fill: { r: 255, g: 255, b: 255 }
+          fill: this.podDocComp.activePodDocument.getBackgroundColor()
         }
       );
       this.podDocComp.activeLayerSubscription.next(firstLayer);
@@ -772,7 +774,7 @@ export class RenderActions {
       for (let i = activeDocument.getLayers().length - 1; i >= 0; i--) {
         this.clearCanvas(effectsCanvas);
         let currentLayer = activeDocument.getLayers()[i];
-        if (!currentLayer.visible) continue;
+        if (!currentLayer?.visible) continue;
         if (i == activeDocument.getActiveLayerIndex()) { // Draw on current layer
           for (let action of currentLayer.actions) {
             action.render(effectsCanvas, activeDocument);
@@ -794,7 +796,7 @@ export class RenderActions {
       }
     } else {
       let currentLayer = activeDocument.getActiveLayer();
-      if (!currentLayer.visible) return;
+      if (!currentLayer?.visible) return;
       for (let action of currentLayer.actions) {
         action.render(this.getDrawCanvas(), activeDocument);
       }
@@ -817,9 +819,8 @@ export class RenderActions {
       }
       canvas.getContext("2d").drawImage(effectsCanvas, 0, 0);
     }
-
-
   }
+
 
   getCanvasContainer() {
     return <HTMLDivElement>document.querySelector(".pod-document-content-canvas-container");
