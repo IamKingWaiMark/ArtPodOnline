@@ -7,7 +7,9 @@ import { PodDocMetaData, PodDocument } from 'src/app/tools/classes/pod-document'
 import { PodPreset, PresetMetric } from 'src/app/tools/classes/pod-preset';
 import { PodFeature } from 'src/app/tools/enums/pod-feature';
 import { PodEditAction, PodFileAction } from 'src/app/tools/pod-app-tools/pod-app-tools.component';
+import { TransformValues } from 'src/app/tools/transform-bar/transform-bar.component';
 import { NewPodWindowAction, NewPodWindowActionData } from 'src/app/windows/new-pod-window/new-pod-window.component';
+
 
 @Component({
   selector: 'app-pod',
@@ -26,10 +28,13 @@ export class PodComponent implements OnInit {
   selectedPodFeatureSubscription = new BehaviorSubject<PodFeature>(this.DEFAULTS.POD_FEATURES);
   showNewPodWindow = true;
 
+  activePodDocument: PodDocument;
   podDocuments: PodDocument[] = [];
   podDocumentsSubscription = new BehaviorSubject<PodDocument[]>(this.podDocuments);
 
   droppedImageFileSubscription = new BehaviorSubject<{image: HTMLImageElement, fileName: string}>(null);
+
+  shouldShowTransformBar = false;
 
 
   constructor(@Inject(PLATFORM_ID) private platform: Object) { }
@@ -88,6 +93,10 @@ export class PodComponent implements OnInit {
       } else {
         switch (ev.key.toLowerCase()) {
           case "x": this.GLOBAL_EVENTS.GLOBAL_HOT_KEY_EVENT.emit(HotKey.SWAP_SWATCH); break;
+          case "t": 
+            this.GLOBAL_EVENTS.GLOBAL_HOT_KEY_EVENT.emit(HotKey.TRANSFORM); 
+            this.shouldShowTransformBar = this.podDocumentsSubscription.value.length > 0; 
+            break;
           case " ": this.GLOBAL_EVENTS.GLOBAL_HOT_KEY_EVENT.emit(HotKey.MOVE_POD_DCOUMENT); break;
         }
       }
@@ -233,6 +242,17 @@ export class PodComponent implements OnInit {
     });
   }
 
+  onCancelTransform(cancel: boolean){
+    this.shouldShowTransformBar = cancel;
+  }
+  onAcceptTransform(transform: TransformValues){
+    this.shouldShowTransformBar = false;
+
+  }
+
+  onActiveDocumentChanged(activePodDocument: PodDocument){
+    this.activePodDocument = activePodDocument
+  }
 }
 
 

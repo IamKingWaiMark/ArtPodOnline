@@ -162,11 +162,11 @@ export class PodDocument {
     getBackgroundColor() {
         switch (this.metaData.backgroundColor) {
             case BackgroundColor.WHITE:
-                return {r: 255, g: 255, b: 255};
+                return { r: 255, g: 255, b: 255 };
             case BackgroundColor.BLACK:
-                return {r: 0, g: 0, b: 0};
+                return { r: 0, g: 0, b: 0 };
             default:
-                return {r: 255, g: 255, b: 255};
+                return { r: 255, g: 255, b: 255 };
         }
     }
 
@@ -185,8 +185,9 @@ export class Layer {
     snapshotImageSrc: string;
     moveStartTimer: Date;
     transform: Transform = {
-        origin: {x: 0, y: 0},
-        bounds: null
+        origin: { x: 0, y: 0 },
+        bounds: { x: null, y: null, x2: null, y2: null },
+        rotationAngle: 0
     };
     initialLayerOrigin: Vector2D = { x: 0, y: 0 };
     initialMousePosition: Vector2D = { x: 0, y: 0 };
@@ -344,6 +345,61 @@ export class Layer {
             y: 0 + this.transform.origin.y
         }
     }
+    rotatePoint(point: {x: number, y: number}, angle: number, pivot: Vector2D) {
+
+        return {
+            x: (point.x - pivot.x) * Math.cos(angle) - (point.y - pivot.y) * Math.sin(angle) + (pivot.x),
+            y: (point.x - pivot.x) * Math.sin(angle) + (point.y - pivot.y) * Math.cos(angle) + (pivot.y)
+        }
+    }
+    getPivot() {
+        return {
+            x: (this.transform.bounds.x + this.transform.bounds.x2) / 2,
+            y: (this.transform.bounds.y + this.transform.bounds.y2) / 2
+        }
+    }
+
+    startTransform(){
+        this.transform.rotationAngle = 0;
+        this.calculateBounds();
+    }
+    calculateBounds(){
+        this.transform.bounds = { x: null, y: null, x2: null, y2: null };
+        for(let action of this.actions) {
+            action.calculateBounds();
+        }
+    }
+    updateBounds(x: number, y: number) {
+        let newX = x;
+        let newY = y;
+        if (this.transform.bounds.x == null || this.transform.bounds.x2 == null || this.transform.bounds.y == null || this.transform.bounds.y2 == null) {
+            this.transform.bounds = { x: newX, y: newY, x2: newX, y2: newY };
+        }
+        if (newX < this.transform.bounds.x) {
+            this.transform.bounds.x = newX;
+        } else if (newX > this.transform.bounds.x2) {
+            this.transform.bounds.x2 = newX;
+        }
+        if (newY < this.transform.bounds.y) {
+            this.transform.bounds.y = newY;
+        } else if (newY > this.transform.bounds.y2) {
+            this.transform.bounds.y2 = newY;
+        }
+    }
+    
+    rotate(angle: number){
+        this.transform.rotationAngle = angle;
+        for(let action of this.actions) {
+            action.rotate();
+        }
+    }
+    
+    setTransform() {
+
+    }
+
+
+    
 }
 
 
@@ -369,6 +425,16 @@ export class LayerAction {
     renderForFinal(canvas: HTMLCanvasElement, activeDocument: PodDocument) {
 
     }
+    calculateBounds(){
+
+    }
+    rotate() {
+
+    }
+    renderForTransform(){
+
+    }
+
     onDraw(canvas: HTMLCanvasElement, mousePos: Vector2D, activeDocument: PodDocument) {
         let nowTime = new Date();
         let elapsed = nowTime.getTime() - this.startTime.getTime();
@@ -396,6 +462,8 @@ export class LayerAction {
     resetGlobalComposition(canvas: HTMLCanvasElement) {
         canvas.getContext("2d").globalCompositeOperation = this.DEFAULT_COMPPSITION_OPERATION;
     }
+
+    
 }
 
 export class ImageFileAction extends LayerAction {
@@ -410,7 +478,7 @@ export class ImageFileAction extends LayerAction {
         let imageHeight = this.htmlImageElement.height;
         let scaleW = imageWidth / documentWidth;
         let scaleH = imageHeight / documentHeight;
-        let scale = scaleW > scaleH? scaleW: scaleH
+        let scale = scaleW > scaleH ? scaleW : scaleH
         this.imageScale = {
             x: scale,
             y: scale
@@ -527,7 +595,7 @@ export class FillAction extends LayerAction {
         let hierarchy = new cv.Mat();
         let canvasDimensions = temporaryCanvas.getBoundingClientRect();
         let drawCanvasDimensions = drawCanvas.getBoundingClientRect();
-        cv.findContours(src, contours, hierarchy, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE);
+        cv.findContours(src, contours, hierarchy, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE); // CHAIN_APPROX_NONE
         let index = -1;
         let outsideContours = [];
         let shortestDistance = -1;
@@ -643,7 +711,7 @@ export class FillAction extends LayerAction {
 
         }
         utensil.strokeStyle = `rgb(${this.fill.r}, ${this.fill.g}, ${this.fill.b})`;
-        let lineWidth = 4 * offsetByScale;
+        let lineWidth = 3.2 * offsetByScale;
         lineWidth = lineWidth < 1 ? 1 : lineWidth;
         utensil.lineWidth = Math.ceil(lineWidth);
         utensil.stroke();
@@ -701,25 +769,46 @@ export class FillAction extends LayerAction {
         utensil.fill();
         this.resetGlobalComposition(canvas);
     }
+
+    calculateBounds() {
+        let contours = this.getData();
+        for (let i = 0; i < contours.length; i++) {
+            let contour = this.getData()[i];
+            for (let j = 0; j < contour.data32S.length; j += 2) {
+                let p = { x: 0, y: 0 };
+                p.x = contour.data32S[j];
+                p.y = contour.data32S[j + 1];
+                this.layer.updateBounds(
+                    p.x, 
+                    p.y);
+            }
+        }
+    }
+
+    
+    rotate() {
+        let contours = this.getData();
+        for (let i = 0; i < contours.length; i++) {
+            let contour = this.getData()[i];
+            for (let j = 0; j < contour.data32S.length; j += 2) {
+                let p = { x: 0, y: 0 };
+                p.x = contour.data32S[j];
+                p.y = contour.data32S[j + 1];
+                let rotatedPoint = this.layer.rotatePoint(
+                    p, 
+                    this.layer.transform.rotationAngle, 
+                    this.layer.getPivot());
+                contour.data32S[j] = rotatedPoint.x;
+                contour.data32S[j + 1] = rotatedPoint.y;
+            }
+        }
+    }
+    
 }
 
 export class BrushAction extends LayerAction {
 
-    updateBounds(x: number, y: number){
-        if(this.layer.transform.bounds == null) {
-            this.layer.transform.bounds = {x, y, x2: x, y2: y};
-        }
-        if(x < this.layer.transform.bounds.x) {
-            this.layer.transform.bounds.x = x;
-        } else if (x > this.layer.transform.bounds.x2) {
-            this.layer.transform.bounds.x2 = x;
-        } 
-        if(y < this.layer.transform.bounds.y) {
-            this.layer.transform.bounds.y = y;
-        } else if (y > this.layer.transform.bounds.y2) {
-            this.layer.transform.bounds.y2 = y;
-        } 
-    }
+
     constructor(layer: Layer, actionData: ActionData) {
         super(layer, actionData);
         let activeDocument = this.layer.podDocComp.activePodDocument;
@@ -734,11 +823,10 @@ export class BrushAction extends LayerAction {
             y: ((actionData.mousePos.y - lineOffset.y) / offsetByScale) - activeDocument.getWorldPosition().y / offsetByScale - (this.layer.transform.origin.y)
         }
         actionData.mousePos = calculatedMousePos;
-        this.updateBounds(calculatedMousePos.x, calculatedMousePos.y);
         this.addToData(<DrawPoint>actionData);
+
     }
 
-    static angle = 0;
     render(canvas: HTMLCanvasElement, activeDocument: PodDocument) {
 
         let drawPoints = this.getData();
@@ -750,69 +838,51 @@ export class BrushAction extends LayerAction {
         let offsetByScale = activeDocument.getZoomScale() / activeDocument.getInitialZoomScale();
         for (let i = 1; i < drawPoints.length; i++) {
             let lastDrawPoint = this.getDrawPointBefore(i);
+            let calculatedLastDrawPointX = (((lastDrawPoint.mousePos.x + this.layer.transform.origin.x) * offsetByScale) + activeDocument.getWorldPosition().x);
+            let calculatedLastDrawPointY = (((lastDrawPoint.mousePos.y + this.layer.transform.origin.y) * offsetByScale) + activeDocument.getWorldPosition().y);
+            let calculatedCurrentDrawPointX = (((drawPoints[i].mousePos.x + this.layer.transform.origin.x) * offsetByScale) + activeDocument.getWorldPosition().x);
+            let calculatedCurrentDrawPointY = (((drawPoints[i].mousePos.y + this.layer.transform.origin.y) * offsetByScale) + activeDocument.getWorldPosition().y);
             utensil.beginPath();
             utensil.moveTo(
-                (((lastDrawPoint.mousePos.x + this.layer.transform.origin.x) * offsetByScale) + activeDocument.getWorldPosition().x),
-                (((lastDrawPoint.mousePos.y + this.layer.transform.origin.y) * offsetByScale) + activeDocument.getWorldPosition().y));
+                calculatedLastDrawPointX,
+                calculatedLastDrawPointY
+                );
             utensil.lineTo(
-                (((drawPoints[i].mousePos.x + this.layer.transform.origin.x) * offsetByScale) + activeDocument.getWorldPosition().x),
-                (((drawPoints[i].mousePos.y + this.layer.transform.origin.y) * offsetByScale) + activeDocument.getWorldPosition().y));
+                calculatedCurrentDrawPointX,
+                calculatedCurrentDrawPointY);
 
             utensil.stroke();
         }
- 
-        /*let xDistance = 
-        Math.abs(
-            ((this.layer.transform.bounds.x + this.layer.transform.origin.x) * offsetByScale - activeDocument.getWorldPosition().x) - 
-            ((this.layer.transform.bounds.x2 + this.layer.transform.origin.x) * offsetByScale - activeDocument.getWorldPosition().x)
-        ) / 2;
-        let yDistance = 
-        Math.abs(
-            ((this.layer.transform.bounds.y + this.layer.transform.origin.y) * offsetByScale - activeDocument.getWorldPosition().y) - 
-            ((this.layer.transform.bounds.y2 + this.layer.transform.origin.y) * offsetByScale - activeDocument.getWorldPosition().y)
-        ) / 2;
 
-        let x = this.getPivot().x + (this.getPivot().x - xDistance) * Math.cos(this.angle);
-        let y = this.getPivot().y + (this.getPivot().y - yDistance) * Math.sin(this.angle);;
-        let x2 = this.getPivot().x + (this.getPivot().x + xDistance) * Math.cos(this.angle);
-        let y2 = this.getPivot().y + (this.getPivot().y + yDistance) * Math.sin(this.angle);;
-                utensil.stroke();
-        utensil.moveTo(x, y);
-        utensil.lineTo(x2, y);
-        utensil.clearRect(0, 0, 1000, 1000)
-        BrushAction.angle += (Math.PI * 2) / 360;
-        let pivotDistance = this.getPivotDistance();
-        let x = this.getPivot().x - (50 * Math.cos(BrushAction.angle));
-        let y = this.getPivot().y - (50 * Math.sin(BrushAction.angle));
-        let x2 = this.getPivot().x + (50 * Math.cos(BrushAction.angle));
-        let y2 = this.getPivot().y + (50 * Math.sin(BrushAction.angle));
         utensil.beginPath();
-        utensil.moveTo(x, y);
-        utensil.lineTo(x2, y2);
-        
-
+        utensil.moveTo(
+            ((this.layer.transform.bounds.x + this.layer.transform.origin.x) * offsetByScale) + activeDocument.getWorldPosition().x, 
+            ((this.layer.transform.bounds.y + this.layer.transform.origin.y) * offsetByScale) + activeDocument.getWorldPosition().y);
+        utensil.lineTo(
+            ((this.layer.transform.bounds.x2 + this.layer.transform.origin.x) * offsetByScale) + activeDocument.getWorldPosition().x, 
+            ((this.layer.transform.bounds.y + this.layer.transform.origin.y) * offsetByScale) + activeDocument.getWorldPosition().y);
+        utensil.lineTo(
+            ((this.layer.transform.bounds.x2 + this.layer.transform.origin.x) * offsetByScale) + activeDocument.getWorldPosition().x, 
+            ((this.layer.transform.bounds.y2 + this.layer.transform.origin.y) * offsetByScale) + activeDocument.getWorldPosition().y);
+        utensil.lineTo(
+            ((this.layer.transform.bounds.x + this.layer.transform.origin.x) * offsetByScale) + activeDocument.getWorldPosition().x, 
+            ((this.layer.transform.bounds.y2 + this.layer.transform.origin.y) * offsetByScale) + activeDocument.getWorldPosition().y);
+        utensil.lineTo(
+            ((this.layer.transform.bounds.x + this.layer.transform.origin.x) * offsetByScale) + activeDocument.getWorldPosition().x, 
+            ((this.layer.transform.bounds.y + this.layer.transform.origin.y) * offsetByScale) + activeDocument.getWorldPosition().y);
         utensil.stroke();
         utensil.beginPath();
-        utensil.fillStyle = "rgb(0, 255, 0)";
-        utensil.ellipse(this.getPivot().x, this.getPivot().y, 10, 10, Math.PI / 4, 0, 2 * Math.PI);
+        utensil.ellipse(
+            ((this.layer.getPivot().x + this.layer.transform.origin.x) * offsetByScale) + activeDocument.getWorldPosition().x, 
+            ((this.layer.getPivot().y + this.layer.transform.origin.y) * offsetByScale) + activeDocument.getWorldPosition().y, 20, 20, 0, 0, 360);
+        utensil.fillStyle = "orange";
         utensil.fill();
-        */
-
         this.resetGlobalComposition(canvas);
     }
-    getPivot(){
-        return {
-            x: (this.layer.transform.bounds.x + this.layer.transform.bounds.x2) / 2,
-            y: (this.layer.transform.bounds.y + this.layer.transform.bounds.y2) / 2
-        }
-    }
 
-    getPivotDistance(){
-        return {
-            x: (this.layer.transform.bounds.x2 - this.layer.transform.bounds.x),
-            y: (this.layer.transform.bounds.y2 - this.layer.transform.bounds.y)
-        } 
-    }
+
+
+
     renderForFinal(canvas: HTMLCanvasElement, activeDocument: PodDocument) {
         let drawPoints = this.getData();
         let utensil = canvas.getContext("2d");
@@ -862,9 +932,9 @@ export class BrushAction extends LayerAction {
             x: ((currentMousePos.x - lineOffset.x) / offsetByScale) - activeDocument.getWorldPosition().x / offsetByScale - (this.layer.transform.origin.x),
             y: ((currentMousePos.y - lineOffset.y) / offsetByScale) - activeDocument.getWorldPosition().y / offsetByScale - (this.layer.transform.origin.y)
         }
-
-        this.updateBounds(calculatedMousePos.x, calculatedMousePos.y);
         this.getData().push({ mousePos: calculatedMousePos });
+        
+        
     }
 
     getOffset(canvas: HTMLCanvasElement): Vector2D {
@@ -891,6 +961,32 @@ export class BrushAction extends LayerAction {
         }
         return null;
     }
+    
+    calculateBounds() {
+        let drawPoints = this.getData();
+        for (let i = 0; i < drawPoints.length; i++) {
+            let drawPoint = this.getData()[i];
+            this.layer.updateBounds(
+                drawPoint.mousePos.x, 
+                drawPoint.mousePos.y);
+        }
+    }
+    
+
+    rotate() {
+        let drawPoints = this.getData();
+        for (let i = 0; i < drawPoints.length; i++) {
+            let currentPoint = this.getData()[i];
+            let rotatedPoint = this.layer.rotatePoint(
+                currentPoint.mousePos, 
+                this.layer.transform.rotationAngle, 
+                this.layer.getPivot());
+            currentPoint.mousePos.x = rotatedPoint.x;
+            currentPoint.mousePos.y = rotatedPoint.y;
+        }
+    }
+    
+
 
 }
 
@@ -901,7 +997,9 @@ export class EraserAction extends BrushAction {
         this.compositionOperation = "destination-out";
     }
 
+    calculateBounds() {
 
+    }
 }
 export interface PodDocMetaData {
     docName: string,
@@ -922,5 +1020,6 @@ export interface ActionData {
 
 export interface Transform {
     origin: Vector2D,
-    bounds: {x: number, y: number, x2: number, y2: number}
+    bounds: { x: number, y: number, x2: number, y2: number },
+    rotationAngle: number
 }

@@ -19,5 +19,6 @@ export enum HotKey {
     REDO,
     FIX_MOUSE_POS,
     IMPORT,
-    ADD_IMAGE
+    ADD_IMAGE,
+    TRANSFORM
 }

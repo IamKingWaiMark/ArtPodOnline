@@ -180,7 +180,8 @@ export class PodDocumentComponent implements OnInit {
               this.FIX_MOUSE_POS_START.x = this.GLOBAL_MOUSE_POS.x;
               this.FIX_MOUSE_POS_START.y = this.GLOBAL_MOUSE_POS.y;
             }
-
+            break;
+          case HotKey.TRANSFORM:
             break;
         }
 
@@ -193,6 +194,7 @@ export class PodDocumentComponent implements OnInit {
         this.activePodDocument?.getActiveLayer()?.onMoveStop();
       }
     );
+    let angle = 0;
     this.GLOBAL_EVENTS.GLOBAL_KEYDOWN_EVENT.subscribe(
       (ev: KeyboardEvent) => {
         switch (ev.key.toLowerCase()) {
@@ -207,6 +209,8 @@ export class PodDocumentComponent implements OnInit {
             break;
           case "arrowright":
             this.activePodDocument?.getActiveLayer()?.onMove({x: 1, y: 0});
+            break;
+          default:
             break;
         }
       }

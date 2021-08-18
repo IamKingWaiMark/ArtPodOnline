@@ -9,6 +9,7 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { PodFeatureContextMenuComponent } from './tools/pod-feature-context-menu/pod-feature-context-menu.component';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatDialogModule } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ColorPickerComponent } from './windows/color-picker/color-picker.component';
 import { NewPodWindowComponent } from './windows/new-pod-window/new-pod-window.component';
@@ -18,6 +19,7 @@ import { PodDocumentControllerComponent } from './windows/pod-document-controlle
 import { PodDocumentComponent } from './tools/pod-document/pod-document.component';
 import { LayersWindowComponent } from './windows/layers-window/layers-window.component';
 import { LayersWindowLayersTabComponent } from './tools/layers-window-layers-tab/layers-window-layers-tab.component';
+import { TransformBarComponent } from './tools/transform-bar/transform-bar.component';
 
 @NgModule({
   declarations: [
@@ -31,7 +33,8 @@ import { LayersWindowLayersTabComponent } from './tools/layers-window-layers-tab
     PodDocumentControllerComponent,
     PodDocumentComponent,
     LayersWindowComponent,
-    LayersWindowLayersTabComponent
+    LayersWindowLayersTabComponent,
+    TransformBarComponent
   ],
   imports: [
     BrowserModule.withServerTransition({ appId: 'serverApp' }),
@@ -40,7 +43,8 @@ import { LayersWindowLayersTabComponent } from './tools/layers-window-layers-tab
     MatButtonToggleModule,
     MatSliderModule,
     MatDialogModule,
-    DragDropModule
+    DragDropModule,
+    MatIconModule
   ],
   providers: [],
   bootstrap: [AppComponent]

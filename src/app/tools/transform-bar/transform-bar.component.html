@@ -1,0 +1,34 @@
+<div id="transform-bar">
+    <div id="transform-bar-container">
+        <div class="transform-bar-item">
+            <span>X: </span>
+            <input class="themed-input" maxlength="6" 
+                [value]="activePodDocument.getActiveLayer().transform.origin.x"
+                type="number">
+        </div>
+        <div class="transform-bar-item">
+            <span>Y: </span>
+            <input class="themed-input" maxlength="6" 
+                [value]="activePodDocument.getActiveLayer().transform.origin.y"
+                type="number">
+        </div>
+        <div class="transform-bar-item">
+            <span>W: </span>
+            <input class="themed-input" maxlength="6">
+        </div>
+        <div class="transform-bar-item">
+            <span>H: </span>
+            <input class="themed-input" maxlength="6">
+        </div>
+        <div class="transform-bar-item">
+            <span>R: </span>
+            <input class="themed-input" maxlength="6" [value]="activePodDocument.getActiveLayer().transform.rotationAngle">
+        </div>
+        <div class="transform-bar-item-icon" style="text-align: end;">
+            <mat-icon (click)="onCancelClick()">not_interested</mat-icon>
+        </div>
+        <div class="transform-bar-item-icon" style="text-align: left;">
+            <mat-icon (click)="onAcceptClick()">done</mat-icon>
+        </div>
+    </div>
+</div>

@@ -7,7 +7,11 @@
         ></app-pod-app-tools>
     </div>
     <div id="pod-tools">
-
+        <app-transform-bar *ngIf="shouldShowTransformBar && podDocumentsSubscription.value.length > 0"
+            (cancledSubscription)="onCancelTransform($event)"
+            (acceptChangesSubscription)="onAcceptTransform($event)"
+            [activePodDocument]="activePodDocument"
+            ></app-transform-bar>
     </div>
 
     <div id="pod-features">
@@ -31,6 +35,7 @@
         [podDocumentsSubscription]="podDocumentsSubscription"
         [droppedImageFileSubscription]="droppedImageFileSubscription"
         [showNewPodWindow]="showNewPodWindow"
+        (activePodDocumentSubscription)="onActiveDocumentChanged($event)"
         ></app-pod-document-controller>
         <app-new-pod-window *ngIf="shouldShowNewPodWindow()" (action)="onNewPodWindowAction($event)" [podDocuments]="podDocuments"></app-new-pod-window>
     </div>

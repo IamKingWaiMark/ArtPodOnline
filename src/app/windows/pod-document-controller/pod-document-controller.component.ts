@@ -1,6 +1,6 @@
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { isPlatformBrowser } from '@angular/common';
-import { Component, Inject, Input, OnInit, PLATFORM_ID } from '@angular/core';
+import { Component, EventEmitter, Inject, Input, OnInit, Output, PLATFORM_ID } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { FeatureInfo } from 'src/app/tools/classes/feature-info';
 import { GlobalEvents } from 'src/app/tools/classes/global-events';
@@ -19,9 +19,10 @@ export class PodDocumentControllerComponent implements OnInit {
   @Input() FEATURE_INFO: FeatureInfo;
   @Input() GLOBAL_EVENTS: GlobalEvents;
   @Input() showNewPodWindow: boolean;
+
   podDocuments: PodDocument [];
   activeTabIndex = 0;
-  activePodDocumentSubscription = new BehaviorSubject<PodDocument>(null);
+  @Output() activePodDocumentSubscription = new BehaviorSubject<PodDocument>(null);
   activeLayerSubscription = new BehaviorSubject<Layer>(null);
 
   constructor(@Inject(PLATFORM_ID) private platform: Object ) { }
