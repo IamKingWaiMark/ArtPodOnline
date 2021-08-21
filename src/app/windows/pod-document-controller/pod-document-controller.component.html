@@ -1,8 +1,9 @@
 <div class="pod-document-controller">
     <div class="pod-document-controller-tab-bar">
         <div class="tab-bar-tab-container" cdkDropList [cdkDropListData]="podDocuments" (cdkDropListDropped)="onTabDrop($event)" cdkDropListOrientation="horizontal">
-            <div cdkDrag *ngFor="let podDocument of podDocuments; index as i;"  [ngClass]="{'tab': true, 'active-tab': isActiveTab(i)}"  >
-                <div class="tab-title-container"><span class="tab-title" (click)="onTabClick(i)">{{podDocument?.metaData.docName}}</span></div>
+            <div cdkDrag *ngFor="let podDocument of podDocuments; index as i;" 
+             [ngClass]="{'tab': true, 'active-tab': isActiveTab(i)}"  (click)="onTabClick(i)">
+                <div class="tab-title-container"><span class="tab-title" >{{podDocument?.metaData.docName}}</span></div>
                 <div class="tab-icon-container"><span class="tab-icon" (click)="onDeleteTabClick(i)">x</span></div>
             </div>
         </div>
@@ -19,7 +20,10 @@
         [activeLayerSubscription]="activeLayerSubscription"
         [droppedImageFileSubscription]="droppedImageFileSubscription"
         [GLOBAL_EVENTS]="GLOBAL_EVENTS"
-        [showNewPodWindow]="showNewPodWindow"></app-pod-document>
+        [showNewPodWindow]="showNewPodWindow"
+        [shouldShowTransformBarSubscription]="shouldShowTransformBarSubscription"
+        [transformChangesSubscription]="transformChangesSubscription"
+        ></app-pod-document>
     </div>
 
 </div>

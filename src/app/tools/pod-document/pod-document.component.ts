@@ -9,6 +9,7 @@ import { Layer, PodDocument } from '../classes/pod-document';
 import { Vector2D } from '../classes/vectors';
 import { PodDocumentState } from '../enums/pod-document-state';
 import { PodFeature } from '../enums/pod-feature';
+import { Transform } from '../interfaces/transform-values';
 import { SaveAsDialogComponent } from '../save-as-dialog/save-as-dialog.component';
 /**             Canvas Container
  * ------------------------------------------------------
@@ -33,6 +34,8 @@ export class PodDocumentComponent implements OnInit {
   @Input() FEATURE_INFO: FeatureInfo;
   @Input() GLOBAL_EVENTS: GlobalEvents;
   @Input() showNewPodWindow: boolean;
+  @Input() shouldShowTransformBarSubscription: BehaviorSubject<Boolean>;
+  @Input() transformChangesSubscription: BehaviorSubject<Transform>;
 
   CURSOR_ACTIONS: CursorActions = null;
   DOCUMENT_ACTIONS: PodDocumentActions = null;
@@ -71,7 +74,26 @@ export class PodDocumentComponent implements OnInit {
       this.subscribeToActivePodDocument();
       this.subscribeToActiveLayer();
       this.subscribeToDroppedImageFile();
+      this.subscribeToTransformBar();
     }
+  }
+
+  subscribeToTransformBar(){
+    this.shouldShowTransformBarSubscription.subscribe(
+      shouldShowTransformBar => {
+        if(shouldShowTransformBar) {
+          
+        }
+        this.RENDER_ACTIONS.render(false);
+      }
+    );
+
+    this.transformChangesSubscription.subscribe(
+      (transform) => {
+        this.activePodDocument?.getActiveLayer().set(transform);
+        this.RENDER_ACTIONS.render(false);
+      }
+    );
   }
   subscribeToDroppedImageFile() {
     this.droppedImageFileSubscription.subscribe(
@@ -194,7 +216,7 @@ export class PodDocumentComponent implements OnInit {
         this.activePodDocument?.getActiveLayer()?.onMoveStop();
       }
     );
-    let angle = 0;
+
     this.GLOBAL_EVENTS.GLOBAL_KEYDOWN_EVENT.subscribe(
       (ev: KeyboardEvent) => {
         switch (ev.key.toLowerCase()) {

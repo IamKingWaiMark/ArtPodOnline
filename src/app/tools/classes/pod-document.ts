@@ -1,6 +1,7 @@
 import { AppActionType } from "../enums/app-action-type";
 import { PodFeature } from "../enums/pod-feature";
 import { DrawActionData } from "../interfaces/app-action-data";
+import { Transform } from "../interfaces/transform-values";
 import { PodDocumentComponent } from "../pod-document/pod-document.component";
 import { AppAction } from "./app-action";
 import { BackgroundColor, PodPreset } from "./pod-preset";
@@ -186,8 +187,9 @@ export class Layer {
     moveStartTimer: Date;
     transform: Transform = {
         origin: { x: 0, y: 0 },
-        bounds: { x: null, y: null, x2: null, y2: null },
-        rotationAngle: 0
+        bounds: {x: 0, y: 0, x2: 0, y2: 0, w: 0, h: 0},
+        rotationAngle: 0,
+        scale: {x: 1, y: 1}
     };
     initialLayerOrigin: Vector2D = { x: 0, y: 0 };
     initialMousePosition: Vector2D = { x: 0, y: 0 };
@@ -364,7 +366,7 @@ export class Layer {
         this.calculateBounds();
     }
     calculateBounds(){
-        this.transform.bounds = { x: null, y: null, x2: null, y2: null };
+        this.transform.bounds = { x: null, y: null, x2: null, y2: null, w: null, h: null };
         for(let action of this.actions) {
             action.calculateBounds();
         }
@@ -373,7 +375,7 @@ export class Layer {
         let newX = x;
         let newY = y;
         if (this.transform.bounds.x == null || this.transform.bounds.x2 == null || this.transform.bounds.y == null || this.transform.bounds.y2 == null) {
-            this.transform.bounds = { x: newX, y: newY, x2: newX, y2: newY };
+            this.transform.bounds = { x: newX, y: newY, x2: newX, y2: newY, w: 0, h: 0 };
         }
         if (newX < this.transform.bounds.x) {
             this.transform.bounds.x = newX;
@@ -385,6 +387,9 @@ export class Layer {
         } else if (newY > this.transform.bounds.y2) {
             this.transform.bounds.y2 = newY;
         }
+
+        this.transform.bounds.w = this.transform.bounds.x2 - this.transform.bounds.x;
+        this.transform.bounds.h = this.transform.bounds.y2 - this.transform.bounds.y;
     }
     
     rotate(angle: number){
@@ -394,10 +399,13 @@ export class Layer {
         }
     }
     
-    setTransform() {
 
+    set(transform: Transform){
+        for(let action of this.actions) {
+            action.scale.x = transform.scale.x;
+            action.scale.y = transform.scale.y;
+        }
     }
-
 
     
 }
@@ -409,6 +417,8 @@ export class LayerAction {
     utensilSize: number;
     startTime: Date;
     layer: Layer;
+    scale = {x: 1, y: 1};
+
     readonly DEFAULT_COMPPSITION_OPERATION = "source-over";
     compositionOperation = this.DEFAULT_COMPPSITION_OPERATION;
     constructor(layer: Layer, actionData: ActionData) {
@@ -468,7 +478,7 @@ export class LayerAction {
 
 export class ImageFileAction extends LayerAction {
     htmlImageElement: HTMLImageElement;
-    imageScale: Vector2D = { x: 1, y: 1 };
+
     constructor(layer: Layer, actionData: ActionData) {
         super(layer, actionData);
         this.htmlImageElement = actionData.htmlImageElement;
@@ -476,13 +486,10 @@ export class ImageFileAction extends LayerAction {
         let documentHeight = layer.podDocComp.activePodDocument.getHeight();
         let imageWidth = this.htmlImageElement.width;
         let imageHeight = this.htmlImageElement.height;
-        let scaleW = imageWidth / documentWidth;
-        let scaleH = imageHeight / documentHeight;
-        let scale = scaleW > scaleH ? scaleW : scaleH
-        this.imageScale = {
-            x: scale,
-            y: scale
-        };
+        let scaleW =  documentWidth / imageWidth;
+        let scaleH = documentHeight / imageHeight;
+        this.scale.x = scaleW > 1? 1: scaleW;
+        this.scale.y = scaleH > 1? 1: scaleH;
     }
     render(canvas: HTMLCanvasElement, activeDocument: PodDocument) {
         let utensil = canvas.getContext("2d");
@@ -493,8 +500,8 @@ export class ImageFileAction extends LayerAction {
             this.htmlImageElement,
             activeDocument.getWorldPosition().x + (this.layer.transform.origin.x * offsetByScale),
             activeDocument.getWorldPosition().y + (this.layer.transform.origin.y * offsetByScale),
-            this.htmlImageElement.width / this.imageScale.x * activeDocument.getZoomScale() + 1,
-            this.htmlImageElement.height / this.imageScale.y * activeDocument.getZoomScale() + 1);
+            (this.htmlImageElement.width * this.scale.x) * activeDocument.getZoomScale() + 1,
+            (this.htmlImageElement.height * this.scale.y) * activeDocument.getZoomScale() + 1);
     }
     renderForFinal(canvas: HTMLCanvasElement, activeDocument: PodDocument) {
         let offsetByScale = 1 / activeDocument.getInitialZoomScale();
@@ -824,7 +831,6 @@ export class BrushAction extends LayerAction {
         }
         actionData.mousePos = calculatedMousePos;
         this.addToData(<DrawPoint>actionData);
-
     }
 
     render(canvas: HTMLCanvasElement, activeDocument: PodDocument) {
@@ -835,13 +841,14 @@ export class BrushAction extends LayerAction {
         utensil.lineWidth = this.utensilSize * activeDocument.getZoomScale();
         utensil.strokeStyle = `rgb(${this.fill.r}, ${this.fill.g}, ${this.fill.b}, ${this.fill.a})`;
         utensil.lineCap = "round";
-        let offsetByScale = activeDocument.getZoomScale() / activeDocument.getInitialZoomScale();
+        let offsetByScale = (activeDocument.getZoomScale() / activeDocument.getInitialZoomScale());
+
         for (let i = 1; i < drawPoints.length; i++) {
             let lastDrawPoint = this.getDrawPointBefore(i);
-            let calculatedLastDrawPointX = (((lastDrawPoint.mousePos.x + this.layer.transform.origin.x) * offsetByScale) + activeDocument.getWorldPosition().x);
-            let calculatedLastDrawPointY = (((lastDrawPoint.mousePos.y + this.layer.transform.origin.y) * offsetByScale) + activeDocument.getWorldPosition().y);
-            let calculatedCurrentDrawPointX = (((drawPoints[i].mousePos.x + this.layer.transform.origin.x) * offsetByScale) + activeDocument.getWorldPosition().x);
-            let calculatedCurrentDrawPointY = (((drawPoints[i].mousePos.y + this.layer.transform.origin.y) * offsetByScale) + activeDocument.getWorldPosition().y);
+            let calculatedLastDrawPointX = ((((lastDrawPoint.mousePos.x) + this.layer.transform.origin.x) * offsetByScale) + activeDocument.getWorldPosition().x);
+            let calculatedLastDrawPointY = ((((lastDrawPoint.mousePos.y) + this.layer.transform.origin.y) * offsetByScale) + activeDocument.getWorldPosition().y);
+            let calculatedCurrentDrawPointX = ((((drawPoints[i].mousePos.x) + this.layer.transform.origin.x) * offsetByScale) + activeDocument.getWorldPosition().x);
+            let calculatedCurrentDrawPointY = ((((drawPoints[i].mousePos.y) + this.layer.transform.origin.y) * offsetByScale) + activeDocument.getWorldPosition().y);
             utensil.beginPath();
             utensil.moveTo(
                 calculatedLastDrawPointX,
@@ -1016,10 +1023,4 @@ export interface ActionData {
     mousePos?: Vector2D;
     utensilSize?: number;
     htmlImageElement?: HTMLImageElement;
-}
-
-export interface Transform {
-    origin: Vector2D,
-    bounds: { x: number, y: number, x2: number, y2: number },
-    rotationAngle: number
 }

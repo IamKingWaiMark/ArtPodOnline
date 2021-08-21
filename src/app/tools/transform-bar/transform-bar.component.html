@@ -3,22 +3,34 @@
         <div class="transform-bar-item">
             <span>X: </span>
             <input class="themed-input" maxlength="6" 
+                #originXInput
                 [value]="activePodDocument.getActiveLayer().transform.origin.x"
+                (change)="onOriginXChanged(originXInput)"
                 type="number">
         </div>
         <div class="transform-bar-item">
             <span>Y: </span>
             <input class="themed-input" maxlength="6" 
+                #originYInput
                 [value]="activePodDocument.getActiveLayer().transform.origin.y"
+                (change)="onOriginYChanged(originYInput)"
                 type="number">
         </div>
         <div class="transform-bar-item">
             <span>W: </span>
-            <input class="themed-input" maxlength="6">
+            <input class="themed-input" maxlength="4"
+                #scaleWInput
+                [value]="transformScaleXToPercent()"
+                (change)="onScaleXChanged(scaleWInput)"
+                type="number">
         </div>
         <div class="transform-bar-item">
             <span>H: </span>
-            <input class="themed-input" maxlength="6">
+            <input class="themed-input" maxlength="4"
+                #scaleHInput
+                [value]="transformScaleYToPercent()"
+                (change)="onScaleYChanged(scaleHInput)"
+                type="number">
         </div>
         <div class="transform-bar-item">
             <span>R: </span>
